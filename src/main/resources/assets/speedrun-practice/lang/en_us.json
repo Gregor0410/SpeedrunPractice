@@ -1,0 +1,11 @@
+{
+  "speedrun-practice.options": "Speedrun Practice Options",
+  "speedrun-practice.options.bastions": "Bastion Settings",
+  "speedrun-practice.options.bastions.housing": "Housing",
+  "speedrun-practice.options.bastions.stables": "Stables",
+  "speedrun-practice.options.bastions.treasure": "Treasure",
+  "speedrun-practice.options.bastions.bridge": "Bridge",
+  "speedrun-practice.options.nether_region_size": "Nether Structure Region Size",
+  "speedrun-practice.options.bastion_rarity": "Bastion Rarity",
+  "speedrun-practice.options.bastion_rarity_tooltip": "Sets the percentage of nether structures that will be bastions"
+}

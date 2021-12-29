@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "speedrun-practice",
+  "version": "${version}",
+  "name": "SpeedrunPractice",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/SpeedrunPractice/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.gregor0410.speedrunpractice.SpeedrunPractice"
+    ]
+  },
+  "mixins": [
+    "SpeedrunPractice.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.12.12",
+    "fabric": "*",
+    "minecraft": "1.16.1"
+  }
+}

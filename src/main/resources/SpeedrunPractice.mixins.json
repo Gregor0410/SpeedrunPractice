@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.gregor0410.speedrunpractice.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "BastionRemnantFeatureConfigMixin",
+    "BastionRemnantFeatureMixin",
+    "DimensionTypeAccess",
+    "MinecraftServerAccess",
+    "MinecraftServerMixin",
+    "NetherFortressFeatureMixin",
+    "OptionsScreenMixin",
+    "ScreenAccess",
+    "ServerPlayerEntityMixin",
+    "StructuresConfigAccess",
+    "StructuresConfigMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
