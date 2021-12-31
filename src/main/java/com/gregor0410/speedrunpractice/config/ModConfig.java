@@ -1,5 +1,6 @@
 package com.gregor0410.speedrunpractice.config;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,15 +20,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ModConfig{
     public Boolean stables=true;
     public Boolean bridge=true;
     public Boolean treasure=true;
     public Boolean housing=true;
-    public List<List<String>> endPracticeInventories =Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>());
-    public int endPracticeSlot=0;
+    public Map<String,List<List<String>>> practiceInventories =new HashMap<>(ImmutableMap.of("end",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>()),"nether",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>())));
+    public Map<String,Integer> practiceSlots = new HashMap<>(ImmutableMap.of("end", 0, "nether", 0));
     public float netherRegionSize=1;
     public int bastionRarity = 60;
 

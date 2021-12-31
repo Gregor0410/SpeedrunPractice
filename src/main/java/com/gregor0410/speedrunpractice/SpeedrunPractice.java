@@ -19,8 +19,13 @@ import static java.lang.Math.ceil;
 
 public class SpeedrunPractice implements ModInitializer {
     public static ModConfig config;
-    public static Map<StructureFeature<?>, StructureConfig> structures= Maps.newHashMap(StructuresConfig.DEFAULT_STRUCTURES);
+    public static Map<StructureFeature<?>, StructureConfig> overworldStructures = Maps.newHashMap(StructuresConfig.DEFAULT_STRUCTURES);
+    public static Map<StructureFeature<?>, StructureConfig> netherStructures = Maps.newHashMap(StructuresConfig.DEFAULT_STRUCTURES);
     public static List<StructurePoolFeatureConfig> possibleBastionConfigs=new ArrayList<>();
+
+    static {
+        netherStructures.put(StructureFeature.RUINED_PORTAL, new StructureConfig(25, 10, 34222645));
+    }
 
     @Override
     public void onInitialize() {
@@ -39,7 +44,7 @@ public class SpeedrunPractice implements ModInitializer {
         int defaultNetherSeparation = StructuresConfig.DEFAULT_STRUCTURES.get(StructureFeature.FORTRESS).getSeparation();
         int netherSalt = 30084232;
         StructureConfig netherConfig = new StructureConfig((int) ceil(defaultNetherSpacing*config.netherRegionSize), (int) ceil(defaultNetherSeparation*config.netherRegionSize),netherSalt);
-        structures.putAll(ImmutableMap.of(StructureFeature.FORTRESS,netherConfig,StructureFeature.BASTION_REMNANT,netherConfig));
+        netherStructures.putAll(ImmutableMap.of(StructureFeature.FORTRESS,netherConfig,StructureFeature.BASTION_REMNANT,netherConfig));
         //Update possible bastion types
         possibleBastionConfigs.clear();
         if(config.bridge) possibleBastionConfigs.add(new StructurePoolFeatureConfig(new Identifier("bastion/bridge/start"),60));

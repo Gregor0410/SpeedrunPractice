@@ -13,8 +13,8 @@ import java.util.Map;
 
 @Mixin(StructuresConfig.class)
 public class StructuresConfigMixin {
-    @Redirect(method = "<init>",at=@At(value="FIELD",target ="Lnet/minecraft/world/gen/chunk/StructuresConfig;structures:Ljava/util/Map;",opcode = Opcodes.PUTFIELD))
+    @Redirect(method = "<init>(Z)V",at=@At(value="FIELD",target ="Lnet/minecraft/world/gen/chunk/StructuresConfig;structures:Ljava/util/Map;",opcode = Opcodes.PUTFIELD))
     private void modifyStructures(StructuresConfig sc, Map<StructureFeature<?>, StructureConfig> structures){
-        ((StructuresConfigAccess)sc).setStructures(SpeedrunPractice.structures);
+        ((StructuresConfigAccess)sc).setStructures(SpeedrunPractice.overworldStructures);
     }
 }
