@@ -16,7 +16,7 @@ public class Command {
         CommandRegistrationCallback.EVENT.register(((dispatcher, dedicated) -> {
             LiteralArgumentBuilder<ServerCommandSource> inventoryTree = literal("inventory")
                 .then(argument("slot", integer(1, 3))
-                    .then(literal("set")
+                    .then(literal("select")
                             .executes(Practice::setSlot)
                     ).then(literal("save")
                             .executes(Practice::saveSlot)
