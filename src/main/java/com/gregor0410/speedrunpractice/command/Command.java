@@ -35,6 +35,10 @@ public class Command {
                     }))
                     .then(literal("seed").executes(Practice::seed).then(argument("seed",LongArgumentType.longArg()).executes(Practice::setSeed)))
             );
+            dispatcher.register(literal("instaperch").executes((ctx)->{
+                ctx.getSource().getMinecraftServer().getCommandManager().execute(ctx.getSource().withSilent(),"/data merge entity @e[type=ender_dragon,limit=1] {DragonPhase:2}");
+                return 1;
+            }));
         }));
     }
 }
