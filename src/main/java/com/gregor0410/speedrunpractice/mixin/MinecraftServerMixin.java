@@ -5,7 +5,9 @@ import com.gregor0410.speedrunpractice.IMinecraftServer;
 import com.gregor0410.speedrunpractice.world.PracticeWorld;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerManager;
 import net.minecraft.server.WorldGenerationProgressListenerFactory;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -56,14 +58,15 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
     protected static void setupSpawn(ServerWorld serverWorld, ServerWorldProperties serverWorldProperties, boolean bl, boolean bl2, boolean bl3) {
     }
 
+    @Shadow public abstract PlayerManager getPlayerManager();
+
     private final List<PracticeWorld> endPracticeWorlds = new ArrayList<>();
     private final List<Map<RegistryKey<DimensionType>,PracticeWorld>> linkedPracticeWorlds = new ArrayList<>();
 
     @Override
-    public ServerWorld createEndPracticeWorld() throws IOException {
+    public ServerWorld createEndPracticeWorld(long seed) throws IOException {
         //reset dragon fight data
         this.saveProperties.method_29037(new CompoundTag());
-        long seed = new Random().nextLong();
         RegistryKey<World> worldRegistryKey = createWorldKey();
         PracticeWorld endPracticeWorld = createPracticeWorld(seed, worldRegistryKey, DimensionType.THE_END_REGISTRY_KEY,World.OVERWORLD,World.NETHER,World.END);
         this.worlds.put(worldRegistryKey,endPracticeWorld);
@@ -82,6 +85,7 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Override
     public Map<RegistryKey<DimensionType>, PracticeWorld> createLinkedPracticeWorld(long seed) throws IOException {
+        this.saveProperties.method_29037(new CompoundTag());
         Map<RegistryKey<DimensionType>,PracticeWorld> linkedWorlds = new HashMap<>();
         RegistryKey<World> overworldKey = createWorldKey();
         RegistryKey<World> netherKey = createWorldKey();
@@ -134,7 +138,8 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
                 false,
                 BiomeAccess.hashSeed(seed),
                 ImmutableList.of(),
-                false,
+                true,
+                seed,
                 associatedOverworld,
                 associatedNether,
                 associatedEnd);
@@ -155,6 +160,13 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Inject(method="shutdown",at=@At("HEAD"))
     private void removePracticeWorlds(CallbackInfo ci) throws IOException {
+        for(ServerPlayerEntity player : this.getPlayerManager().getPlayerList()){
+            //reset spawn point to overworld if spawn point is in a PracticeWorld
+            if(Objects.equals(player.getSpawnPointDimension().getValue().getNamespace(), "speedrun_practice")){
+                player.setSpawnPoint(World.OVERWORLD,null,false,false);
+                this.getPlayerManager().respawnPlayer(player,true);
+            }
+        }
         for(PracticeWorld practiceWorld : this.endPracticeWorlds){
             removePracticeWorld(practiceWorld);
         }

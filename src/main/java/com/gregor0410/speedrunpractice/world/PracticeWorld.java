@@ -20,11 +20,11 @@ import java.util.concurrent.Executor;
 public class PracticeWorld extends ServerWorld {
     private final long seed;
     public final Map<RegistryKey<World>,RegistryKey<World>> associatedWorlds;
-    private final Map<DimensionType,RegistryKey<World>> dimensionToVanillaWorldKey = ImmutableMap.of(DimensionType.getOverworldDimensionType(),World.OVERWORLD, DimensionTypeAccess.getNetherType(),World.NETHER,DimensionTypeAccess.getEndType(),World.END);
+    public static final Map<DimensionType,RegistryKey<World>> dimensionToVanillaWorldKey = ImmutableMap.of(DimensionType.getOverworldDimensionType(),World.OVERWORLD, DimensionTypeAccess.getNetherType(),World.NETHER,DimensionTypeAccess.getEndType(),World.END);
 
-    public PracticeWorld(MinecraftServer server, Executor workerExecutor, LevelStorage.Session session, ServerWorldProperties properties, RegistryKey<World> registryKey, RegistryKey<DimensionType> registryKey2, DimensionType dimensionType, WorldGenerationProgressListener generationProgressListener, ChunkGenerator chunkGenerator, boolean bl, long l, List<Spawner> list, boolean bl2,RegistryKey<World> associatedOverworld,RegistryKey<World> associatedNether,RegistryKey<World> associatedEnd) {
+    public PracticeWorld(MinecraftServer server, Executor workerExecutor, LevelStorage.Session session, ServerWorldProperties properties, RegistryKey<World> registryKey, RegistryKey<DimensionType> registryKey2, DimensionType dimensionType, WorldGenerationProgressListener generationProgressListener, ChunkGenerator chunkGenerator, boolean bl, long l, List<Spawner> list, boolean bl2,long seed,RegistryKey<World> associatedOverworld,RegistryKey<World> associatedNether,RegistryKey<World> associatedEnd) {
         super(server, workerExecutor, session, properties, registryKey, registryKey2, dimensionType, generationProgressListener, chunkGenerator, bl, l, list, bl2);
-        this.seed = l;
+        this.seed = seed;
         this.associatedWorlds = ImmutableMap.of(World.OVERWORLD,associatedOverworld,World.NETHER,associatedNether,World.END,associatedEnd);
     }
 

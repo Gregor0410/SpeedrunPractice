@@ -13,22 +13,31 @@ import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.Heightmap;
 import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.gen.feature.StructureFeature;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Random;
 
-public class NetherPractice implements Command<ServerCommandSource> {
+public class PostBlindPractice implements Command<ServerCommandSource> {
     @Override
     public int run(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+        int maxDist;
+        try {
+            maxDist = ctx.getArgument("maxDist", Integer.class);
+        }catch (IllegalArgumentException e){
+            maxDist = SpeedrunPractice.config.defaultMaxDist;
+        }
         long seed;
         try{
             seed = ctx.getArgument("seed",long.class);
         }catch(IllegalArgumentException e){
             seed = SpeedrunPractice.random.nextLong();
         }
+        ServerPlayerEntity player = ctx.getSource().getPlayer();
         MinecraftServer server = ctx.getSource().getMinecraftServer();
         Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld = null;
         try {
@@ -36,26 +45,32 @@ public class NetherPractice implements Command<ServerCommandSource> {
         } catch (IOException e) {
             return 0;
         }
-        ServerPlayerEntity player = ctx.getSource().getPlayer();
-        player.inventory.clear(); //clear inventory so item based advancements are gained
+        server.getCommandManager().execute(server.getCommandSource().withSilent(),"/advancement revoke @a everything");
         PracticeWorld overworld = linkedPracticeWorld.get(DimensionType.OVERWORLD_REGISTRY_KEY);
-        PracticeWorld nether = linkedPracticeWorld.get(DimensionType.THE_NETHER_REGISTRY_KEY);
-        Practice.setSpawnPos(overworld,player);
         overworld.getChunkManager().addTicket(ChunkTicketType.START,new ChunkPos(overworld.getSpawnPos()),11, Unit.INSTANCE);
-        BlockPos overworldPos = overworld.getSpawnPos();
-        BlockPos netherPos = new BlockPos(overworldPos.getX()/8D,overworldPos.getY(),overworldPos.getZ()/8D);
+        Practice.setSpawnPos(overworld,player);
+        BlockPos overworldPos = getOverworldPos(overworld,maxDist,new Random(seed));
         Practice.createPortals(linkedPracticeWorld, player, overworld, overworldPos);
+        player.teleport(overworld,overworld.getSpawnPos().getX(),overworld.getSpawnPos().getY(),overworld.getSpawnPos().getZ(),90,0);
         //this needs to be a server task so the portal gets added to poi storage before the changeDimension call
         server.execute(()-> {
-            player.refreshPositionAndAngles(netherPos,90,0);
-            player.changeDimension(nether);
-            player.setVelocity(Vec3d.ZERO);
-            server.getCommandManager().execute(server.getCommandSource().withSilent(),"/advancement revoke @a everything");
-            Practice.getInventory(player, "nether");
             Practice.resetPlayer(player);
+            player.refreshPositionAndAngles(overworldPos,90,0);
+            Practice.getInventory(player, "postblind");
+            player.changeDimension(overworld);
             Practice.startSpeedrunIGTTimer();
         });
         return 1;
     }
 
+    private BlockPos getOverworldPos(PracticeWorld overworld,int maxDist, Random random) {
+        ChunkPos strongholdLoc = new ChunkPos(overworld.getChunkManager().getChunkGenerator().locateStructure(overworld, StructureFeature.STRONGHOLD,new BlockPos(0,0,0),100,false));
+        double angle = random.nextDouble() * 2*Math.PI;
+        int dist = maxDist >0 ?random.nextInt(maxDist) : 0;
+        int x = strongholdLoc.getStartX()+8+(int)Math.round(Math.cos(angle) * dist);
+        int z = strongholdLoc.getStartZ()+8+(int)Math.round(Math.sin(angle) * dist);
+        int y = overworld.getChunk(x >> 4, z >> 4).sampleHeightmap(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15);
+        y = random.nextInt(y)+20;
+        return new BlockPos(x,y,z);
+    }
 }

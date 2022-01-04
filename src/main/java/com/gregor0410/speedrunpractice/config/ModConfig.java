@@ -29,10 +29,16 @@ public class ModConfig{
     public Boolean bridge=true;
     public Boolean treasure=true;
     public Boolean housing=true;
-    public Map<String,List<List<String>>> practiceInventories =new HashMap<>(ImmutableMap.of("end",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>()),"nether",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>())));
-    public Map<String,Integer> practiceSlots = new HashMap<>(ImmutableMap.of("end", 0, "nether", 0));
+    public Map<String,List<List<String>>> practiceInventories =new HashMap<>(ImmutableMap.of(
+            "end",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>()),
+            "nether",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>()),
+            "overworld",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>()),
+            "postblind",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>())));
+    public Map<String,Integer> practiceSlots = new HashMap<>(ImmutableMap.of("end", 0, "nether", 0,"postblind",0,"overworld",0));
     public float netherRegionSize=1;
     public int bastionRarity = 60;
+    public int defaultMaxDist = 1000;
+    public boolean calcMode = true;
 
     public static ModConfig load() {
         Path path = FabricLoader.getInstance().getConfigDir().resolve("speedrun-practice.json");
@@ -73,6 +79,14 @@ public class ModConfig{
                 .setTextGetter(a->new LiteralText(String.format("%d %%",a)))
                 .setSaveConsumer(a->bastionRarity=a)
                 .setTooltip(new TranslatableText("speedrun-practice.options.bastion_rarity_tooltip"))
+                .build());
+        general.addEntry(entryBuilder.startIntField(new TranslatableText("speedrun-practice.options.max_dist"),defaultMaxDist)
+                .setDefaultValue(1000)
+                .setMin(0)
+                .setSaveConsumer(a->defaultMaxDist=a)
+                .build());
+        general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.calc_mode"),calcMode)
+                .setDefaultValue(true)
                 .build());
         general.addEntry(entryBuilder.startSubCategory(new TranslatableText("speedrun-practice.options.bastions"), Lists.newArrayList(
                 entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.housing"),housing)

@@ -1,5 +1,6 @@
 package com.gregor0410.speedrunpractice.command;
 
+import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.minecraft.server.command.ServerCommandSource;
@@ -23,13 +24,16 @@ public class Command {
                 );
             dispatcher.register(
                 literal("practice")
-                    .then(literal("end").executes(new EndPractice()).then(inventoryTree))
-                    .then(literal("nether").executes(new NetherPractice()).then(inventoryTree))
+                    .then(literal("end").executes(new EndPractice()).then(inventoryTree).then(argument("seed", LongArgumentType.longArg()).executes(new EndPractice())))
+                    .then(literal("nether").executes(new NetherPractice()).then(inventoryTree).then(argument("seed", LongArgumentType.longArg()).executes(new NetherPractice())))
+                    .then(literal("overworld").executes(new OverworldPractice()).then(inventoryTree).then(argument("seed", LongArgumentType.longArg()).executes(new OverworldPractice())))
+                    .then(literal("postblind").executes(new PostBlindPractice()).then(inventoryTree).then(argument("maxDist",integer(0)).executes(new PostBlindPractice()).then(argument("seed", LongArgumentType.longArg()).executes(new PostBlindPractice()))))
                     .then(literal("world").executes(ctx->{
                         ServerPlayerEntity player = ctx.getSource().getPlayer();
                         player.sendMessage(new LiteralText(player.getServerWorld().getRegistryKey().getValue().toString()),false);
                         return 1;
                     }))
+                    .then(literal("seed").executes(Practice::seed).then(argument("seed",LongArgumentType.longArg()).executes(Practice::setSeed)))
             );
         }));
     }

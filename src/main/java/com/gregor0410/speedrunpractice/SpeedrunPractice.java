@@ -22,6 +22,7 @@ public class SpeedrunPractice implements ModInitializer {
     public static Map<StructureFeature<?>, StructureConfig> overworldStructures = Maps.newHashMap(StructuresConfig.DEFAULT_STRUCTURES);
     public static Map<StructureFeature<?>, StructureConfig> netherStructures = Maps.newHashMap(StructuresConfig.DEFAULT_STRUCTURES);
     public static List<StructurePoolFeatureConfig> possibleBastionConfigs=new ArrayList<>();
+    public static SpeedrunPracticeRandom random = new SpeedrunPracticeRandom();
 
     static {
         netherStructures.put(StructureFeature.RUINED_PORTAL, new StructureConfig(25, 10, 34222645));

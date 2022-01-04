@@ -1,6 +1,8 @@
 package com.gregor0410.speedrunpractice.command;
 
 import com.gregor0410.speedrunpractice.SpeedrunPractice;
+import com.gregor0410.speedrunpractice.mixin.ServerPlayerEntityAccess;
+import com.gregor0410.speedrunpractice.world.PracticeWorld;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -11,10 +13,18 @@ import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.dimension.DimensionType;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class Practice {
@@ -49,7 +59,16 @@ public class Practice {
         return 1;
     }
 
-    static void getInventory(ServerPlayerEntity player, String key) {
+    public static void startSpeedrunIGTTimer(){
+        try {
+            Class<?> timerClass = Class.forName("com.redlimerl.speedrunigt.timer.InGameTimer");
+            Method startMethod = timerClass.getMethod("start");
+            startMethod.invoke(null);
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored){}
+    }
+
+
+    public static void getInventory(ServerPlayerEntity player, String key) {
         List<String> inventoryStringList = SpeedrunPractice.config.practiceInventories.get(key).get(SpeedrunPractice.config.practiceSlots.get(key));
         if(inventoryStringList!=null) {
             List<CompoundTag> inventoryTagList = inventoryStringList.stream().map(tag -> {
@@ -68,9 +87,43 @@ public class Practice {
 
     static void resetPlayer(ServerPlayerEntity player) {
         player.setHealth(20f);
+        player.setExperienceLevel(0);
         player.getHungerManager().setFoodLevel(20);
         player.getHungerManager().setSaturationLevelClient(5f);
         player.clearStatusEffects();
-        player.setVelocity(0,0,0);
+        player.setVelocity(Vec3d.ZERO);
+        ((ServerPlayerEntityAccess)player).setSeenCredits(false);
+    }
+
+    public static int seed(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+        String seed= String.valueOf(SpeedrunPractice.random.getSeed());
+        Text text = Texts.bracketed((new LiteralText(seed)).styled((style) -> {
+            return style.withColor(Formatting.GREEN).withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, String.valueOf(seed))).setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TranslatableText("chat.copy.click"))).withInsertion(String.valueOf(seed));
+        }));
+        ctx.getSource().getPlayer().sendMessage(text,false);
+        return 1;
+    }
+
+    public static int setSeed(CommandContext<ServerCommandSource> ctx) {
+        SpeedrunPractice.random.seed.set(ctx.getArgument("seed",long.class));
+        return 1;
+    }
+
+    static void createPortals(Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld, ServerPlayerEntity player, PracticeWorld overworld, BlockPos overworldPos) {
+        BlockPos prevPos = player.getBlockPos();
+        player.refreshPositionAndAngles(new BlockPos(overworldPos.getX()/8D, overworldPos.getY(), overworldPos.getZ()/8D),90,0);
+        player.setInNetherPortal(overworldPos);
+        linkedPracticeWorld.get(DimensionType.THE_NETHER_REGISTRY_KEY).getPortalForcer().createPortal(player);
+        player.refreshPositionAndAngles(overworldPos,90,0);
+        overworld.getPortalForcer().createPortal(player);
+        player.refreshPositionAndAngles(prevPos,90,0);
+        player.netherPortalCooldown = player.getDefaultNetherPortalCooldown();
+    }
+
+    public static void setSpawnPos(PracticeWorld overworld, ServerPlayerEntity player) {
+        ServerPlayerEntityAccess playerAccess = (ServerPlayerEntityAccess) player;
+        playerAccess.setSpawnPointDimension(overworld.getRegistryKey());
+        playerAccess.setSpawnPointPosition(null);
+        playerAccess.setSpawnPointSet(false);
     }
 }
