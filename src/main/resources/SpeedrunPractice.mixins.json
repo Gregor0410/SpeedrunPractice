@@ -4,6 +4,7 @@
   "package": "com.gregor0410.speedrunpractice.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "AbstractFireBlockMixin",
     "BastionRemnantFeatureConfigMixin",
     "BastionRemnantFeatureMixin",
     "ChunkGeneratorTypeMixin",
