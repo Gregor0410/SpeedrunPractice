@@ -19,7 +19,10 @@ public class BastionRemnantFeatureMixin {
     private void shouldStartAt(ChunkGenerator chunkGenerator, BiomeSource biomeSource, long l, ChunkRandom chunkRandom, int i, int j, Biome biome, ChunkPos chunkPos, BastionRemnantFeatureConfig bastionRemnantFeatureConfig,CallbackInfoReturnable<Boolean> cir){
         if(!(SpeedrunPractice.config.bridge||SpeedrunPractice.config.housing||SpeedrunPractice.config.treasure||SpeedrunPractice.config.stables)){
             cir.setReturnValue(false);
-        }else{
+        }else if(SpeedrunPractice.config.bastionRarity == 60){
+            cir.setReturnValue(chunkRandom.nextInt(5)>=2);
+        }
+        else{
             cir.setReturnValue(chunkRandom.nextInt(100) >= (100-SpeedrunPractice.config.bastionRarity));
         }
     }

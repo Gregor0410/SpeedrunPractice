@@ -88,6 +88,7 @@ public class Practice {
     static void resetPlayer(ServerPlayerEntity player) {
         player.setHealth(20f);
         player.setExperienceLevel(0);
+        player.setExperiencePoints(0);
         player.getHungerManager().setFoodLevel(20);
         player.getHungerManager().setSaturationLevelClient(5f);
         player.clearStatusEffects();
