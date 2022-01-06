@@ -9,6 +9,7 @@
     "BastionRemnantFeatureMixin",
     "ChunkGeneratorTypeMixin",
     "DimensionTypeAccess",
+    "EnderDragonFightAccess",
     "EndPortalBlockMixin",
     "EntityMixin",
     "KeyboardMixin",
