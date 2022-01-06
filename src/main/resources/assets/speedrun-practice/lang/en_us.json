@@ -9,5 +9,6 @@
   "speedrun-practice.options.bastion_rarity": "Bastion Rarity",
   "speedrun-practice.options.bastion_rarity_tooltip": "Sets the percentage of nether structures that will be bastions",
   "speedrun-practice.options.max_dist": "Post Blind Default Max Stronghold Distance",
-  "speedrun-practice.options.calc_mode": "Change F3+C so calculators work in practice worlds"
+  "speedrun-practice.options.calc_mode": "Change F3+C so calculators work in practice worlds",
+  "speedrun-practice.options.deletePracticeWorlds": "Automatically delete practice worlds"
 }

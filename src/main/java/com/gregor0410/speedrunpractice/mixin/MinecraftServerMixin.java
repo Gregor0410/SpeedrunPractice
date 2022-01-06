@@ -3,6 +3,7 @@ package com.gregor0410.speedrunpractice.mixin;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.gregor0410.speedrunpractice.IMinecraftServer;
+import com.gregor0410.speedrunpractice.SpeedrunPractice;
 import com.gregor0410.speedrunpractice.world.PracticeWorld;
 import net.minecraft.entity.boss.dragon.EnderDragonFight;
 import net.minecraft.nbt.CompoundTag;
@@ -209,7 +210,9 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         if(enderDragonFight!=null){
             ((EnderDragonFightAccess)enderDragonFight).getBossBar().clearPlayers();
         }
-        FileUtils.deleteDirectory(worldFolder);
+        if(SpeedrunPractice.config.deletePracticeWorlds) {
+            FileUtils.deleteDirectory(worldFolder);
+        }
     }
 
     private void removeLinkedPracticeWorld(Map<RegistryKey<DimensionType>,PracticeWorld> linkedPracticeWorld) throws IOException {

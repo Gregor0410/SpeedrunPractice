@@ -42,6 +42,7 @@ public class ModConfig{
     public int bastionRarity = 60;
     public int defaultMaxDist = 1000;
     public boolean calcMode = true;
+    public boolean deletePracticeWorlds = true;
 
     public static ModConfig load() {
         Path path = FabricLoader.getInstance().getConfigDir().resolve("speedrun-practice.json");
@@ -87,6 +88,10 @@ public class ModConfig{
                 .setDefaultValue(1000)
                 .setMin(0)
                 .setSaveConsumer(a->defaultMaxDist=a)
+                .build());
+        general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.deletePracticeWorlds"),deletePracticeWorlds)
+                .setDefaultValue(true)
+                .setSaveConsumer(a->deletePracticeWorlds=a)
                 .build());
         general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.calc_mode"),calcMode)
                 .setDefaultValue(true)
