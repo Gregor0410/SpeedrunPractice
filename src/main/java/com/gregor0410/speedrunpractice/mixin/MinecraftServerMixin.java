@@ -223,18 +223,20 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Inject(method="shutdown",at=@At("HEAD"))
     private void removePracticeWorlds(CallbackInfo ci) throws IOException {
-        for(ServerPlayerEntity player : this.getPlayerManager().getPlayerList()){
-            //reset spawn point to overworld if spawn point is in a PracticeWorld
-            if(Objects.equals(player.getSpawnPointDimension().getValue().getNamespace(), "speedrun_practice")){
-                player.setSpawnPoint(World.OVERWORLD,null,false,false);
-                this.getPlayerManager().respawnPlayer(player,true);
+        if(SpeedrunPractice.config.deletePracticeWorlds) {
+            for (ServerPlayerEntity player : this.getPlayerManager().getPlayerList()) {
+                //reset spawn point to overworld if spawn point is in a PracticeWorld
+                if (Objects.equals(player.getSpawnPointDimension().getValue().getNamespace(), "speedrun_practice")) {
+                    player.setSpawnPoint(World.OVERWORLD, null, false, false);
+                    this.getPlayerManager().respawnPlayer(player, true);
+                }
             }
-        }
-        for(PracticeWorld practiceWorld : this.endPracticeWorlds){
-            removePracticeWorld(practiceWorld);
-        }
-        for(Map<RegistryKey<DimensionType>,PracticeWorld> linkedPracticeWorld : this.linkedPracticeWorlds){
-            removeLinkedPracticeWorld(linkedPracticeWorld);
+            for (PracticeWorld practiceWorld : this.endPracticeWorlds) {
+                removePracticeWorld(practiceWorld);
+            }
+            for (Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld : this.linkedPracticeWorlds) {
+                removeLinkedPracticeWorld(linkedPracticeWorld);
+            }
         }
     }
 
