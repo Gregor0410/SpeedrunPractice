@@ -47,7 +47,8 @@ public class PostBlindPractice implements Command<ServerCommandSource> {
         }
         server.getCommandManager().execute(server.getCommandSource().withSilent(),"/advancement revoke @a everything");
         PracticeWorld overworld = linkedPracticeWorld.get(DimensionType.OVERWORLD_REGISTRY_KEY);
-        overworld.getChunkManager().addTicket(ChunkTicketType.START,new ChunkPos(overworld.getSpawnPos()),11, Unit.INSTANCE);
+        if(SpeedrunPractice.config.postBlindSpawnChunks)
+            overworld.getChunkManager().addTicket(ChunkTicketType.START,new ChunkPos(overworld.getSpawnPos()),11, Unit.INSTANCE);
         Practice.setSpawnPos(overworld,player);
         BlockPos overworldPos = getOverworldPos(overworld,maxDist,new Random(seed));
         Practice.createPortals(linkedPracticeWorld, player, overworld, overworldPos);
@@ -55,7 +56,7 @@ public class PostBlindPractice implements Command<ServerCommandSource> {
         //this needs to be a server task so the portal gets added to poi storage before the changeDimension call
         server.execute(()-> {
             Practice.resetPlayer(player);
-            player.refreshPositionAndAngles(overworldPos,90,0);
+            player.teleport(overworld,overworldPos.getX(),overworldPos.getY(),overworldPos.getZ(),90,0);
             Practice.getInventory(player, "postblind");
             player.changeDimension(overworld);
             Practice.startSpeedrunIGTTimer();

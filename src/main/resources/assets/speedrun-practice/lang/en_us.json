@@ -10,5 +10,8 @@
   "speedrun-practice.options.bastion_rarity_tooltip": "Sets the percentage of nether structures that will be bastions",
   "speedrun-practice.options.max_dist": "Post Blind Default Max Stronghold Distance",
   "speedrun-practice.options.calc_mode": "Change F3+C so calculators work in practice worlds",
-  "speedrun-practice.options.deletePracticeWorlds": "Automatically delete practice worlds"
+  "speedrun-practice.options.deletePracticeWorlds": "Automatically delete practice worlds",
+  "speedrun-practice.options.postBlindSpawnChunks": "Generate spawn chunks in post blind practice",
+  "speedrun-practice.options.postBlindSpawnChunks.tooltip1": "When disabled, /practice postblind will run more quickly,",
+  "speedrun-practice.options.postBlindSpawnChunks.tooltip2":"but the practice world will not load the spawn chunks."
 }

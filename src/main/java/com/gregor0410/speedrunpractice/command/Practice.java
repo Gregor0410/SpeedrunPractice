@@ -13,9 +13,11 @@ import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.dimension.DimensionType;
@@ -112,11 +114,15 @@ public class Practice {
 
     static void createPortals(Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld, ServerPlayerEntity player, PracticeWorld overworld, BlockPos overworldPos) {
         BlockPos prevPos = player.getBlockPos();
-        player.refreshPositionAndAngles(new BlockPos(overworldPos.getX()/8D, overworldPos.getY(), overworldPos.getZ()/8D),90,0);
+        BlockPos netherPos = new BlockPos(overworldPos.getX() / 8D, overworldPos.getY(), overworldPos.getZ() / 8D);
+        player.refreshPositionAndAngles(netherPos,90,0);
         player.setInNetherPortal(overworldPos);
-        linkedPracticeWorld.get(DimensionType.THE_NETHER_REGISTRY_KEY).getPortalForcer().createPortal(player);
+        PracticeWorld nether = linkedPracticeWorld.get(DimensionType.THE_NETHER_REGISTRY_KEY);
+        nether.getPortalForcer().createPortal(player);
+        nether.getChunkManager().addTicket(ChunkTicketType.field_19280, new ChunkPos(netherPos), 3, netherPos);
         player.refreshPositionAndAngles(overworldPos,90,0);
         overworld.getPortalForcer().createPortal(player);
+        overworld.getChunkManager().addTicket(ChunkTicketType.field_19280, new ChunkPos(overworldPos), 3, overworldPos);
         player.refreshPositionAndAngles(prevPos,90,0);
         player.netherPortalCooldown = player.getDefaultNetherPortalCooldown();
     }
