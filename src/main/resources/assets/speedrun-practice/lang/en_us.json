@@ -13,5 +13,6 @@
   "speedrun-practice.options.deletePracticeWorlds": "Automatically delete practice worlds",
   "speedrun-practice.options.postBlindSpawnChunks": "Generate spawn chunks in post blind practice",
   "speedrun-practice.options.postBlindSpawnChunks.tooltip1": "When disabled, /practice postblind will run more quickly,",
-  "speedrun-practice.options.postBlindSpawnChunks.tooltip2":"but the practice world will not load the spawn chunks."
+  "speedrun-practice.options.postBlindSpawnChunks.tooltip2":"but the practice world will not load the spawn chunks.",
+  "speedrun-practice.options.postBlindCaveSpawns": "Include Cave Spawns in Post Blind Practice"
 }

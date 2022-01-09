@@ -18,6 +18,7 @@
     "MinecraftServerMixin",
     "NetherFortressFeatureMixin",
     "OptionsScreenMixin",
+    "PlayerAdvancementTrackerMixin",
     "PlayerManagerMixin",
     "ScreenAccess",
     "ServerPlayerEntityAccess",
@@ -27,6 +28,7 @@
     "StructuresConfigMixin"
   ],
   "client": [
+    "DebugHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1

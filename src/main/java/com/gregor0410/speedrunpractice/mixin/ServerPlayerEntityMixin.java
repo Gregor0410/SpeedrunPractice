@@ -77,4 +77,9 @@ public abstract class ServerPlayerEntityMixin {
             return world.getRegistryKey();
         }
     }
+
+    @Redirect(method="dimensionChanged",at=@At(value="INVOKE",target = "Lnet/minecraft/world/World;getRegistryKey()Lnet/minecraft/util/registry/RegistryKey;"))
+    private RegistryKey<World> resolveDimension3(World world){
+        return PracticeWorld.dimensionToVanillaWorldKey.get(world.getDimension());
+    }
 }

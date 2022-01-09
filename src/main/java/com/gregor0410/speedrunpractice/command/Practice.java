@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 public class Practice {
     public static int setSlot(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         int slot = IntegerArgumentType.getInteger(ctx,"slot");
-        String key = ctx.getNodes().get(1).getNode().getName();
+        String key = ctx.getNodes().get(2).getNode().getName();
         ServerPlayerEntity player = ctx.getSource().getPlayer();
         player.sendMessage(new LiteralText(String.format("§aSet %s slot to §2§lslot %d", key,slot)),false);
         SpeedrunPractice.config.practiceSlots.put(key,slot-1);
@@ -45,7 +45,7 @@ public class Practice {
     }
 
     public static int saveSlot(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        String key = ctx.getNodes().get(1).getNode().getName();
+        String key = ctx.getNodes().get(2).getNode().getName();
         int slot = IntegerArgumentType.getInteger(ctx,"slot");
         ServerPlayerEntity player = ctx.getSource().getPlayer();
         player.sendMessage(new LiteralText(String.format("§aSaved current inventory to §2§l%s slot %d",key, slot)),false);
@@ -71,6 +71,8 @@ public class Practice {
 
 
     public static void getInventory(ServerPlayerEntity player, String key) {
+        player.inventory.clear();
+        player.playerScreenHandler.sendContentUpdates();
         List<String> inventoryStringList = SpeedrunPractice.config.practiceInventories.get(key).get(SpeedrunPractice.config.practiceSlots.get(key));
         if(inventoryStringList!=null) {
             List<CompoundTag> inventoryTagList = inventoryStringList.stream().map(tag -> {
@@ -84,6 +86,7 @@ public class Practice {
             ListTag listTag = new ListTag();
             listTag.addAll(inventoryTagList);
             player.inventory.deserialize(listTag);
+            player.playerScreenHandler.sendContentUpdates();
         }
     }
 
@@ -96,6 +99,7 @@ public class Practice {
         player.clearStatusEffects();
         player.setVelocity(Vec3d.ZERO);
         ((ServerPlayerEntityAccess)player).setSeenCredits(false);
+        SpeedrunPractice.autoSaveStater.deleteAllStates();
     }
 
     public static int seed(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {

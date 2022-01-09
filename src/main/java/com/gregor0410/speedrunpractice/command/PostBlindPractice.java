@@ -52,11 +52,11 @@ public class PostBlindPractice implements Command<ServerCommandSource> {
         Practice.setSpawnPos(overworld,player);
         BlockPos overworldPos = getOverworldPos(overworld,maxDist,new Random(seed));
         Practice.createPortals(linkedPracticeWorld, player, overworld, overworldPos);
-        player.teleport(overworld,overworld.getSpawnPos().getX(),overworld.getSpawnPos().getY(),overworld.getSpawnPos().getZ(),90,0);
         //this needs to be a server task so the portal gets added to poi storage before the changeDimension call
         server.execute(()-> {
+//            player.teleport(overworld,overworldPos.getX(),overworldPos.getY(),overworldPos.getZ(),90,0);//makes sure chunks are loaded at the overworld position
+            player.refreshPositionAndAngles(overworldPos,90,0);
             Practice.resetPlayer(player);
-            player.teleport(overworld,overworldPos.getX(),overworldPos.getY(),overworldPos.getZ(),90,0);
             Practice.getInventory(player, "postblind");
             player.changeDimension(overworld);
             Practice.startSpeedrunIGTTimer();
@@ -71,7 +71,9 @@ public class PostBlindPractice implements Command<ServerCommandSource> {
         int x = strongholdLoc.getStartX()+8+(int)Math.round(Math.cos(angle) * dist);
         int z = strongholdLoc.getStartZ()+8+(int)Math.round(Math.sin(angle) * dist);
         int y = overworld.getChunk(x >> 4, z >> 4).sampleHeightmap(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15);
-        y = random.nextInt(y)+20;
+        if(SpeedrunPractice.config.caveSpawns) {
+            y = random.nextInt(y) + 20;
+        }
         return new BlockPos(x,y,z);
     }
 }

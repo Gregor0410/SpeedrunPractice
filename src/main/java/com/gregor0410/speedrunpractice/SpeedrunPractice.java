@@ -2,15 +2,30 @@ package com.gregor0410.speedrunpractice;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.gregor0410.speedrunpractice.command.Command;
 import com.gregor0410.speedrunpractice.config.ModConfig;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.api.VersionParsingException;
+import net.fabricmc.loader.impl.util.version.SemanticVersionImpl;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.gen.chunk.StructureConfig;
 import net.minecraft.world.gen.chunk.StructuresConfig;
 import net.minecraft.world.gen.feature.StructureFeature;
 import net.minecraft.world.gen.feature.StructurePoolFeatureConfig;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,17 +38,53 @@ public class SpeedrunPractice implements ModInitializer {
     public static Map<StructureFeature<?>, StructureConfig> netherStructures = Maps.newHashMap(StructuresConfig.DEFAULT_STRUCTURES);
     public static List<StructurePoolFeatureConfig> possibleBastionConfigs=new ArrayList<>();
     public static SpeedrunPracticeRandom random = new SpeedrunPracticeRandom();
+    public static boolean welcomeShown = false;
+    private static Gson gson = new Gson();
+    private static final ModContainer modContainer = FabricLoader.getInstance().getModContainer("speedrun-practice").get();
+    private static final String donationLink = "https://ko-fi.com/gregor0410";
+    private static final Version version = modContainer.getMetadata().getVersion();
+    public static AutoSaveStater autoSaveStater = new AutoSaveStater();
+    public static SpeedrunIGTInterface speedrunIGTInterface=null;
 
     static {
         netherStructures.put(StructureFeature.RUINED_PORTAL, new StructureConfig(25, 10, 34222645));
     }
 
+
     @Override
     public void onInitialize() {
+        try {
+            speedrunIGTInterface = new SpeedrunIGTInterface();
+        } catch (NoSuchFieldException | ClassNotFoundException ignored) {}
         config = ModConfig.load();
         update();
         Command.registerCommands();
     }
+
+    public static void sendWelcomeMessage(ServerPlayerEntity player) throws IOException, VersionParsingException {
+        player.sendMessage(new LiteralText(String.format("[SpeedrunPractice v%s by Gregor0410]",version)).setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x00ff00))),false);
+        player.sendMessage(new LiteralText("[Donation Link]")
+                .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,donationLink))
+                .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new LiteralText("Click"))))
+                .formatted(Formatting.DARK_GREEN),false);
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpGet request = new HttpGet("https://api.github.com/repos/gregor0410/speedrunpractice/releases/latest");
+        JsonObject jsonObject = client.execute(request, res -> gson.fromJson(new InputStreamReader(res.getEntity().getContent()), JsonObject.class));
+        String latestVersion = jsonObject.get("name").getAsString().substring(1); //get rid of the leading v
+        String patchNotes = jsonObject.get("body").getAsString();
+        if(version.compareTo(new SemanticVersionImpl(latestVersion,false))<0){
+            player.sendMessage(new LiteralText(String.format("There is a new version available: v%s", latestVersion)).formatted(Formatting.RED),false);
+            player.sendMessage(new LiteralText(String.format("Patch notes:\n%s ", patchNotes.replace('\r',' ').replace('-','•'))),false);
+            player.sendMessage(
+                new LiteralText("Click to download latest version")
+                    .setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x00ff00))
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,"https://github.com/Gregor0410/SpeedrunPractice/releases/latest"))
+                    .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new LiteralText("Click")))),false);
+        }else{
+            player.sendMessage(new LiteralText("You are on the latest version."),false);
+        }
+    }
+
 
     public static void update() {
         updateStructures();

@@ -44,6 +44,7 @@ public class ModConfig{
     public boolean calcMode = true;
     public boolean deletePracticeWorlds = true;
     public boolean postBlindSpawnChunks =false;
+    public boolean caveSpawns=true;
 
     public static ModConfig load() {
         Path path = FabricLoader.getInstance().getConfigDir().resolve("speedrun-practice.json");
@@ -98,6 +99,10 @@ public class ModConfig{
                 .setDefaultValue(false)
                 .setSaveConsumer(a->postBlindSpawnChunks=a)
                 .setTooltip(new TranslatableText("speedrun-practice.options.postBlindSpawnChunks.tooltip1"),new TranslatableText("speedrun-practice.options.postBlindSpawnChunks.tooltip2"))
+                .build());
+        general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.postBlindCaveSpawns"),caveSpawns)
+                .setDefaultValue(true)
+                .setSaveConsumer(a->caveSpawns=a)
                 .build());
         general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.calc_mode"),calcMode)
                 .setDefaultValue(true)

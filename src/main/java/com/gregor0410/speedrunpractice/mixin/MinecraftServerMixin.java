@@ -14,6 +14,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.SaveProperties;
@@ -67,6 +68,8 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Shadow public abstract PlayerManager getPlayerManager();
 
+    @Shadow public abstract boolean save(boolean bl, boolean bl2, boolean bl3);
+
     private final List<PracticeWorld> endPracticeWorlds = new ArrayList<>();
     private final List<Map<RegistryKey<DimensionType>,PracticeWorld>> linkedPracticeWorlds = new ArrayList<>();
 
@@ -74,11 +77,12 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         PracticeWorld endPracticeWorld = createPracticeWorld(seed, worldRegistryKey, DimensionType.THE_END_REGISTRY_KEY,World.OVERWORLD,World.NETHER,World.END);
         this.worlds.put(worldRegistryKey,endPracticeWorld);
         this.endPracticeWorlds.add(endPracticeWorld);
-        while(endPracticeWorlds.size()>2){
+        while(endPracticeWorlds.size()>1){
             //remove previous practice worlds
             PracticeWorld world = endPracticeWorlds.remove(0);
             removePracticeWorld(world);
         }
+        this.save(false,false,false);
         return endPracticeWorld;
     }
     @Override
@@ -128,9 +132,6 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
                 }
                 for (String uuid : linkedKeys.keySet()) {
                     Map<String, RegistryKey<World>> linkedKey = linkedKeys.get(uuid);
-                    RegistryKey<World> overworldKey = linkedKey.get("overworld");
-                    RegistryKey<World> netherKey = linkedKey.get("nether");
-                    RegistryKey<World> endKey = linkedKey.get("end");
                     linkedPracticeWorlds.add(createLinkedPracticeWorld(seeds.get(uuid), linkedKey));
                 }
             }
@@ -159,11 +160,12 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         //setup overworld spawn
         setupSpawn(overworld,((ServerWorldAccess) overworld).getWorldProperties(),false,false,true);
         linkedPracticeWorlds.add(linkedWorlds);
-        while(linkedPracticeWorlds.size()>2){
+        while(linkedPracticeWorlds.size()>1){
             //remove previous practice worlds
             Map<RegistryKey<DimensionType>, PracticeWorld> world = linkedPracticeWorlds.remove(0);
             removeLinkedPracticeWorld(world);
         }
+        this.save(false,false,false);
         return linkedWorlds;
     }
 
@@ -204,6 +206,16 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     private void removePracticeWorld(PracticeWorld world) throws IOException {
         EnderDragonFight enderDragonFight = world.getEnderDragonFight();
+        List<ServerPlayerEntity> toRespawn = new ArrayList<>();
+        this.getPlayerManager().getPlayerList().forEach(player->{
+            if(player.getServerWorld().equals(world)) {
+                toRespawn.add(player);
+            }
+        });
+        toRespawn.forEach(player->{
+            BlockPos pos = this.getOverworld().getSpawnPos();
+            player.teleport(this.getOverworld(),pos.getX(),pos.getY(),pos.getZ(),90,0);
+        });
         world.disconnect();
         File worldFolder = this.session.getWorldDirectory(world.getRegistryKey());
         this.worlds.remove(world.getRegistryKey());
