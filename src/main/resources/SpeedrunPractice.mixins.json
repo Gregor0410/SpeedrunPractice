@@ -20,12 +20,14 @@
     "OptionsScreenMixin",
     "PlayerAdvancementTrackerMixin",
     "PlayerManagerMixin",
+    "PortalForcerMixin",
     "ScreenAccess",
     "ServerPlayerEntityAccess",
     "ServerPlayerEntityMixin",
     "ServerWorldAccess",
     "StructuresConfigAccess",
-    "StructuresConfigMixin"
+    "StructuresConfigMixin",
+    "ThreadedAnvilChunkStorageAccess"
   ],
   "client": [
     "DebugHudMixin"

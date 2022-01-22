@@ -19,13 +19,13 @@ public class AutoSaveStater {
     private final Map<String, SpeedrunIGTInterface.TimerState> uuidToTimerState = new HashMap<>();
     private final Boolean LOCK=false;
     private static final Map<String,String> criterionToAdvancementId = new ImmutableMap.Builder<String,String>()
-            .put("minecraft:soul_sand_valley","nether/explore_nether")
-            .put("minecraft:crimson_forest","nether/explore_nether")
-            .put("minecraft:warped_forest","nether/explore_nether")
-            .put("minecraft:nether_wastes","nether/explore_nether")
-            .put("minecraft:basalt_delta","nether/explore_nether")
-//            .put("entered_nether","nether/root")
-            .put("bastion","nether/find_bastion")
+//            .put("minecraft:soul_sand_valley","nether/explore_nether")
+//            .put("minecraft:crimson_forest","nether/explore_nether")
+//            .put("minecraft:warped_forest","nether/explore_nether")
+//            .put("minecraft:nether_wastes","nether/explore_nether")
+//            .put("minecraft:basalt_delta","nether/explore_nether")
+            .put("entered_nether","nether/root")
+            .   put("bastion","nether/find_bastion")
             .put("fortress","nether/find_fortress")
             .put("minecraft:blaze","adventure/kill_all_mobs")
             .put("blaze_rod","nether/obtain_blaze_rod")
@@ -77,18 +77,14 @@ public class AutoSaveStater {
         Class<?> delorean = Class.forName("me.logwet.delorean.DeLorean");
         AtomicReference<String> TRIGGER_SAVE_ID = (AtomicReference) delorean.getDeclaredField("TRIGGER_SAVE_ID").get(null);
         AtomicBoolean TRIGGER_SAVE = (AtomicBoolean) delorean.getDeclaredField("TRIGGER_SAVE").get(null);
-        server.save(false,false,false);
         new Thread(()-> {
-            try {
-                Thread.sleep(500); //Fuck threads
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            while (TRIGGER_SAVE.get()) {
-                try {
-                    TRIGGER_SAVE.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            synchronized (TRIGGER_SAVE) {
+                while (TRIGGER_SAVE.get()) {
+                    try {
+                        TRIGGER_SAVE.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             TRIGGER_SAVE_ID.set(uuid);

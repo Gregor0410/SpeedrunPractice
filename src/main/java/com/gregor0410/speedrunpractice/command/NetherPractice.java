@@ -47,11 +47,11 @@ public class NetherPractice implements Command<ServerCommandSource> {
         ((ServerPlayerEntityAccess)player).setEnteredNetherPos(Vec3d.ofCenter(netherPos));
         Practice.createPortals(linkedPracticeWorld, player, overworld, overworldPos);
         server.getCommandManager().execute(server.getCommandSource().withSilent(),"/advancement revoke @a everything");
-        Practice.getInventory(player, "nether");
         //this needs to be a server task so the portal gets added to poi storage before the changeDimension call
         server.execute(()-> {
             player.refreshPositionAndAngles(netherPos,90,0);
             Practice.resetPlayer(player);
+            Practice.getInventory(player, "nether");
             player.changeDimension(nether);
             player.setVelocity(Vec3d.ZERO);
             Practice.startSpeedrunIGTTimer();

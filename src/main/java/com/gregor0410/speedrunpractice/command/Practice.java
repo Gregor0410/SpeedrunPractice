@@ -14,6 +14,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
@@ -116,7 +117,7 @@ public class Practice {
         return 1;
     }
 
-    static void createPortals(Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld, ServerPlayerEntity player, PracticeWorld overworld, BlockPos overworldPos) {
+    static void createPortals(Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld, ServerPlayerEntity player, ServerWorld overworld, BlockPos overworldPos) {
         BlockPos prevPos = player.getBlockPos();
         BlockPos netherPos = new BlockPos(overworldPos.getX() / 8D, overworldPos.getY(), overworldPos.getZ() / 8D);
         player.refreshPositionAndAngles(netherPos,90,0);
@@ -129,6 +130,17 @@ public class Practice {
         overworld.getChunkManager().addTicket(ChunkTicketType.field_19280, new ChunkPos(overworldPos), 3, overworldPos);
         player.refreshPositionAndAngles(prevPos,90,0);
         player.netherPortalCooldown = player.getDefaultNetherPortalCooldown();
+//        player.getServer().execute(()-> {
+//            BlockPos netherPortalPos = new BlockPos(nether.getPortalForcer().getPortal(netherPos, Vec3d.ZERO, Direction.EAST, 0, 0, true).pos);
+//            ChunkHolder chunkHolder = ((ThreadedAnvilChunkStorageAccess) nether.getChunkManager().threadedAnvilChunkStorage).getChunkHolders().get(new ChunkPos(netherPortalPos).toLong());
+//            CompletableFuture<Chunk> completableFuture = chunkHolder.getFuture();
+//            do {
+//                ((ThreadedAnvilChunkStorageAccess) nether.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().runTasks(completableFuture::isDone);
+//            } while(completableFuture != chunkHolder.getFuture());
+//            completableFuture.join();
+//
+//            nether.getChunkManager().save(false);
+//        });
     }
 
     public static void setSpawnPos(PracticeWorld overworld, ServerPlayerEntity player) {
