@@ -27,6 +27,7 @@ import net.minecraft.world.gen.chunk.ChunkGeneratorType;
 import net.minecraft.world.gen.chunk.SurfaceChunkGenerator;
 import net.minecraft.world.level.LevelProperties;
 import net.minecraft.world.level.ServerWorldProperties;
+import net.minecraft.world.level.UnmodifiableLevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -188,7 +189,7 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         return new PracticeWorld((MinecraftServer)(Object) this,
                 this.workerExecutor,
                 this.session,
-                serverWorldProperties,
+                new UnmodifiableLevelProperties(saveProperties,serverWorldProperties),
                 worldRegistryKey,
                 dimensionRegistryKey,
                 dimensionType,

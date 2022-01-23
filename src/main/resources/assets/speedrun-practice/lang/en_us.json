@@ -14,5 +14,19 @@
   "speedrun-practice.options.postBlindSpawnChunks": "Generate spawn chunks in post blind practice",
   "speedrun-practice.options.postBlindSpawnChunks.tooltip1": "When disabled, /practice postblind will run more quickly,",
   "speedrun-practice.options.postBlindSpawnChunks.tooltip2":"but the practice world will not load the spawn chunks.",
-  "speedrun-practice.options.postBlindCaveSpawns": "Include Cave Spawns in Post Blind Practice"
+  "speedrun-practice.options.postBlindCaveSpawns": "Include Cave Spawns in Post Blind Practice",
+  "speedrun-practice.options.randomisePostBlindInventory": "Randomise Post Blind Inventory",
+  "speedrun-practice.options.end": "End Settings",
+  "speedrun-practice.options.dragon_type": "Dragon Type",
+  "speedrun-practice.options.eliminate_cage_spawns": "Eliminate Cage Spawns",
+  "speedrun-practice.options.towers.small_boy": "Small Boy",
+  "speedrun-practice.options.towers.small_cage": "Small Cage",
+  "speedrun-practice.options.towers.tall_cage": "Tall Cage",
+  "speedrun-practice.options.towers.m85": "M85",
+  "speedrun-practice.options.towers.m88": "M88",
+  "speedrun-practice.options.towers.m91": "M91",
+  "speedrun-practice.options.towers.t94": "T94",
+  "speedrun-practice.options.towers.t97": "T97",
+  "speedrun-practice.options.towers.t100": "T100",
+  "speedrun-practice.options.towers.t103": "T103"
 }

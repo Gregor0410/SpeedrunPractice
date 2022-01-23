@@ -26,12 +26,12 @@ public class PostBlindPractice implements Command<ServerCommandSource> {
     @Override
     public int run(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         int maxDist;
+        long seed;
         try {
             maxDist = ctx.getArgument("maxDist", Integer.class);
         }catch (IllegalArgumentException e){
             maxDist = SpeedrunPractice.config.defaultMaxDist;
         }
-        long seed;
         try{
             seed = ctx.getArgument("seed",long.class);
         }catch(IllegalArgumentException e){
@@ -53,11 +53,13 @@ public class PostBlindPractice implements Command<ServerCommandSource> {
         BlockPos overworldPos = getOverworldPos(overworld,maxDist,new Random(seed));
         Practice.createPortals(linkedPracticeWorld, player, overworld, overworldPos);
         //this needs to be a server task so the portal gets added to poi storage before the changeDimension call
+        long finalSeed = seed;
         server.execute(()-> {
-//            player.teleport(overworld,overworldPos.getX(),overworldPos.getY(),overworldPos.getZ(),90,0);//makes sure chunks are loaded at the overworld position
+            player.teleport(overworld,overworldPos.getX(),overworldPos.getY(),overworldPos.getZ(),90,0);//makes sure chunks are loaded at the overworld position
             player.refreshPositionAndAngles(overworldPos,90,0);
             Practice.resetPlayer(player);
             Practice.getInventory(player, "postblind");
+            if(SpeedrunPractice.config.randomisePostBlindInventory)Practice.populatePostBlindInventory(player, finalSeed);
             player.changeDimension(overworld);
             Practice.startSpeedrunIGTTimer();
         });

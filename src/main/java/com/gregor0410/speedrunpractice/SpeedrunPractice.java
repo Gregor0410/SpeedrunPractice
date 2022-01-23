@@ -104,4 +104,10 @@ public class SpeedrunPractice implements ModInitializer {
         if(config.stables) possibleBastionConfigs.add(new StructurePoolFeatureConfig(new Identifier("bastion/hoglin_stable/origin"),60));
         if(config.housing) possibleBastionConfigs.add(new StructurePoolFeatureConfig(new Identifier("bastion/units/base"),60));
     }
+
+    public enum DragonType{
+        FRONT,
+        BACK,
+        BOTH
+    }
 }

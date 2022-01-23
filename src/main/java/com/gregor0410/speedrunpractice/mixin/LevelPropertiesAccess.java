@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface LevelPropertiesAccess {
     @Accessor("field_25030")
     LevelInfo getLevelInfo();
+    @Accessor("field_25030")
+    void setLevelInfo(LevelInfo levelInfo);
     @Accessor("field_25425")
     GeneratorOptions getGeneratorOptions();
     @Accessor("field_25426")

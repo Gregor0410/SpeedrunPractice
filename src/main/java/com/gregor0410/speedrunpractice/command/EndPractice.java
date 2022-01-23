@@ -23,7 +23,6 @@ public class EndPractice implements Command<ServerCommandSource> {
         //reset dragon fight data
         server.getSaveProperties().method_29037(new CompoundTag());
         ServerPlayerEntity player = context.getSource().getPlayer();
-        Practice.getInventory(player,"end");
         long seed;
         try {
             seed = context.getArgument("seed", long.class);
@@ -35,6 +34,7 @@ public class EndPractice implements Command<ServerCommandSource> {
             player.setSpawnPoint(World.OVERWORLD,null,false,false);
             ServerWorld.createEndSpawnPlatform(world);
             Practice.resetPlayer(player);
+            Practice.getInventory(player,"end");
             player.teleport(world,100,49,0,90,0);
             Practice.startSpeedrunIGTTimer();
             return 1;

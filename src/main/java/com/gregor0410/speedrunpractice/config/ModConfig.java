@@ -8,11 +8,13 @@ import com.gregor0410.speedrunpractice.SpeedrunPractice;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -29,6 +31,7 @@ public class ModConfig{
     public Boolean bridge=true;
     public Boolean treasure=true;
     public Boolean housing=true;
+    public List<Boolean> endTowers = Lists.newArrayList(true,true,true,true,true,true,true,true,true,true);
     public static final List<String> DEFAULTENDINVENTORY;
     public static final List<String> DEFAULTNETHERINVENTORY;
     public static final List<String> DEFAULTPOSTBLINDINVENTORY;
@@ -45,6 +48,9 @@ public class ModConfig{
     public boolean deletePracticeWorlds = true;
     public boolean postBlindSpawnChunks =false;
     public boolean caveSpawns=true;
+    public boolean randomisePostBlindInventory=true;
+    public boolean eliminateCageSpawns = false;
+    public SpeedrunPractice.DragonType dragonType = SpeedrunPractice.DragonType.BOTH;
 
     public static ModConfig load() {
         Path path = FabricLoader.getInstance().getConfigDir().resolve("speedrun-practice.json");
@@ -91,6 +97,10 @@ public class ModConfig{
                 .setMin(0)
                 .setSaveConsumer(a->defaultMaxDist=a)
                 .build());
+        general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.randomisePostBlindInventory"),randomisePostBlindInventory)
+                .setDefaultValue(true)
+                .setSaveConsumer(a->randomisePostBlindInventory=a)
+                .build());
         general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.deletePracticeWorlds"),deletePracticeWorlds)
                 .setDefaultValue(true)
                 .setSaveConsumer(a->deletePracticeWorlds=a)
@@ -128,8 +138,39 @@ public class ModConfig{
                         .setYesNoTextSupplier(a->a ? ScreenTexts.ON : ScreenTexts.OFF)
                         .setSaveConsumer(a->bridge=a)
                         .build())).build());
+        general.addEntry(entryBuilder.startSubCategory(new TranslatableText("speedrun-practice.options.end"), Lists.newArrayList(
+                entryBuilder.startEnumSelector(new TranslatableText("speedrun-practice.options.dragon_type"),SpeedrunPractice.DragonType.class,dragonType)
+                        .setDefaultValue(SpeedrunPractice.DragonType.BOTH)
+                        .setSaveConsumer(a->dragonType=a)
+                        .build(),
+                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.eliminate_cage_spawns"),eliminateCageSpawns)
+                        .setDefaultValue(true)
+                        .setSaveConsumer(a->eliminateCageSpawns=a)
+                        .build(),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.small_boy",0),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.small_cage",1),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.tall_cage",2),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.m85",3),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.m88",4),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.m91",5),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.t94",6),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.t97",7),
+                getEndTower(entryBuilder, "speedrun-practice.options.towers.t100",8),
+                getEndTower(entryBuilder,"speedrun-practice.options.towers.t103",9)
+        )).build());
+
         return builder.build();
     }
+
+    @NotNull
+    private BooleanListEntry getEndTower(ConfigEntryBuilder entryBuilder, String text, int tower) {
+        return entryBuilder.startBooleanToggle(new TranslatableText(text), endTowers.get(tower))
+                .setDefaultValue(true)
+                .setYesNoTextSupplier(a -> a ? ScreenTexts.ON : ScreenTexts.OFF)
+                .setSaveConsumer(a ->endTowers.set(tower,a))
+                .build();
+    }
+
     public void save() throws IOException {
         SpeedrunPractice.update();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();

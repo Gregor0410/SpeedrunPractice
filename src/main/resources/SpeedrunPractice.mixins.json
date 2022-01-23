@@ -25,6 +25,8 @@
     "ServerPlayerEntityAccess",
     "ServerPlayerEntityMixin",
     "ServerWorldAccess",
+    "ServerWorldMixin",
+    "SpikeCacheMixin",
     "StructuresConfigAccess",
     "StructuresConfigMixin",
     "ThreadedAnvilChunkStorageAccess"

@@ -7,6 +7,12 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootTable;
+import net.minecraft.loot.LootTables;
+import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameters;
+import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringNbtReader;
@@ -28,6 +34,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Practice {
@@ -91,6 +98,14 @@ public class Practice {
         }
     }
 
+    public static void populatePostBlindInventory(ServerPlayerEntity player,long seed) {
+        LootTable table = Objects.requireNonNull(player.getServer()).getLootManager().getTable(LootTables.PIGLIN_BARTERING_GAMEPLAY);
+        LootContext lootContext = new LootContext.Builder(player.getServerWorld()).random(seed).parameter(LootContextParameters.THIS_ENTITY,player).build(LootContextTypes.BARTER);
+        while(player.inventory.main.stream().anyMatch(ItemStack::isEmpty)){
+            table.generateLoot(lootContext, player.inventory::insertStack);
+        }
+    }
+
     static void resetPlayer(ServerPlayerEntity player) {
         player.setHealth(20f);
         player.setExperienceLevel(0);
@@ -130,17 +145,6 @@ public class Practice {
         overworld.getChunkManager().addTicket(ChunkTicketType.field_19280, new ChunkPos(overworldPos), 3, overworldPos);
         player.refreshPositionAndAngles(prevPos,90,0);
         player.netherPortalCooldown = player.getDefaultNetherPortalCooldown();
-//        player.getServer().execute(()-> {
-//            BlockPos netherPortalPos = new BlockPos(nether.getPortalForcer().getPortal(netherPos, Vec3d.ZERO, Direction.EAST, 0, 0, true).pos);
-//            ChunkHolder chunkHolder = ((ThreadedAnvilChunkStorageAccess) nether.getChunkManager().threadedAnvilChunkStorage).getChunkHolders().get(new ChunkPos(netherPortalPos).toLong());
-//            CompletableFuture<Chunk> completableFuture = chunkHolder.getFuture();
-//            do {
-//                ((ThreadedAnvilChunkStorageAccess) nether.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().runTasks(completableFuture::isDone);
-//            } while(completableFuture != chunkHolder.getFuture());
-//            completableFuture.join();
-//
-//            nether.getChunkManager().save(false);
-//        });
     }
 
     public static void setSpawnPos(PracticeWorld overworld, ServerPlayerEntity player) {
