@@ -17,6 +17,7 @@ import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.source.BiomeAccess;
@@ -25,9 +26,9 @@ import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.ChunkGeneratorType;
 import net.minecraft.world.gen.chunk.SurfaceChunkGenerator;
+import net.minecraft.world.level.LevelInfo;
 import net.minecraft.world.level.LevelProperties;
 import net.minecraft.world.level.ServerWorldProperties;
-import net.minecraft.world.level.UnmodifiableLevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -94,6 +95,17 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
     private RegistryKey<World> createWorldKey(long seed) {
         return RegistryKey.of(Registry.DIMENSION, new Identifier("speedrun_practice", seed+"_"+UUID.randomUUID().toString()+"_3"));
     }
+
+    @Inject(method="setDifficulty",at=@At("HEAD"))
+    private void setDifficulty(Difficulty difficulty, boolean bl, CallbackInfo ci){
+        LevelInfo levelInfo = saveProperties.getLevelInfo().method_28381(difficulty);
+        this.worlds.values().forEach(world->{
+            if(world instanceof PracticeWorld) {
+                ((LevelPropertiesAccess) world.getLevelProperties()).setLevelInfo(levelInfo);
+            }
+        });
+    }
+
 
     private Map<String,RegistryKey<World>> createLinkedWorldKeys(long seed){
         String uuid = UUID.randomUUID().toString();
@@ -185,11 +197,12 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
             chunkGenerator = DimensionTypeAccess.invokeCreateEndGenerator(seed);
         }
         ServerWorldProperties mainWorldProperties = this.saveProperties.getMainWorldProperties();
-        ServerWorldProperties serverWorldProperties = new LevelProperties(((LevelPropertiesAccess)mainWorldProperties).getLevelInfo(),((LevelPropertiesAccess)mainWorldProperties).getGeneratorOptions(),((LevelPropertiesAccess)mainWorldProperties).getLifecycle());
+        LevelProperties serverWorldProperties = new LevelProperties(saveProperties.getLevelInfo(),saveProperties.getGeneratorOptions(),((LevelPropertiesAccess)mainWorldProperties).getLifecycle());
+        ((LevelPropertiesAccess)serverWorldProperties).setLevelInfo(saveProperties.getLevelInfo());
         return new PracticeWorld((MinecraftServer)(Object) this,
                 this.workerExecutor,
                 this.session,
-                new UnmodifiableLevelProperties(saveProperties,serverWorldProperties),
+                serverWorldProperties,
                 worldRegistryKey,
                 dimensionRegistryKey,
                 dimensionType,
