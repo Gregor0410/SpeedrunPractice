@@ -32,7 +32,6 @@ import net.minecraft.world.level.ServerWorldProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,6 +44,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.BooleanSupplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,8 +63,6 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Shadow public abstract ServerWorld getOverworld();
 
-    @Shadow public abstract @Nullable ServerWorld getWorld(RegistryKey<World> key);
-
     @Shadow
     protected static void setupSpawn(ServerWorld serverWorld, ServerWorldProperties serverWorldProperties, boolean bl, boolean bl2, boolean bl3) {
     }
@@ -72,6 +71,7 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Shadow public abstract boolean save(boolean bl, boolean bl2, boolean bl3);
 
+    private final Queue<Runnable> tickStart = new LinkedBlockingQueue<>();
     private final List<PracticeWorld> endPracticeWorlds = new ArrayList<>();
     private final List<Map<RegistryKey<DimensionType>,PracticeWorld>> linkedPracticeWorlds = new ArrayList<>();
 
@@ -95,6 +95,16 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
     private RegistryKey<World> createWorldKey(long seed) {
         return RegistryKey.of(Registry.DIMENSION, new Identifier("speedrun_practice", seed+"_"+UUID.randomUUID().toString()+"_3"));
     }
+
+    @Inject(method="tick",at=@At("HEAD"))
+    private void onTick(BooleanSupplier shouldKeepTicking, CallbackInfo ci){
+        Runnable runnable;
+        do{
+            runnable = tickStart.poll();
+            if(runnable!=null)runnable.run();
+        }while(runnable!=null);
+    }
+
 
     @Inject(method="setDifficulty",at=@At("HEAD"))
     private void setDifficulty(Difficulty difficulty, boolean bl, CallbackInfo ci){
@@ -145,7 +155,9 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
                 }
                 for (String uuid : linkedKeys.keySet()) {
                     Map<String, RegistryKey<World>> linkedKey = linkedKeys.get(uuid);
-                    linkedPracticeWorlds.add(createLinkedPracticeWorld(seeds.get(uuid), linkedKey));
+                    if(linkedKey.size()==3){
+                        createLinkedPracticeWorld(seeds.get(uuid), linkedKey);
+                    }
                 }
             }
         }
@@ -230,9 +242,17 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
             BlockPos pos = this.getOverworld().getSpawnPos();
             player.teleport(this.getOverworld(),pos.getX(),pos.getY(),pos.getZ(),90,0);
         });
-        world.disconnect();
         File worldFolder = this.session.getWorldDirectory(world.getRegistryKey());
-        this.worlds.remove(world.getRegistryKey());
+        tickStart.add(()->{
+            this.worlds.remove(world.getRegistryKey());
+            world.getChunkManager().executeQueuedTasks();
+            System.gc();
+//            try {
+//                world.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+        });
         if(enderDragonFight!=null){
             ((EnderDragonFightAccess)enderDragonFight).getBossBar().clearPlayers();
         }
@@ -241,7 +261,7 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         }
     }
 
-    private void removeLinkedPracticeWorld(Map<RegistryKey<DimensionType>,PracticeWorld> linkedPracticeWorld) throws IOException {
+    private void removeLinkedPracticeWorld(Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld) throws IOException {
         for(PracticeWorld practiceWorld : linkedPracticeWorld.values()){
             removePracticeWorld(practiceWorld);
         }
@@ -249,21 +269,21 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Inject(method="shutdown",at=@At("HEAD"))
     private void removePracticeWorlds(CallbackInfo ci) throws IOException {
-        if(SpeedrunPractice.config.deletePracticeWorlds) {
-            for (ServerPlayerEntity player : this.getPlayerManager().getPlayerList()) {
-                //reset spawn point to overworld if spawn point is in a PracticeWorld
-                if (Objects.equals(player.getSpawnPointDimension().getValue().getNamespace(), "speedrun_practice")) {
-                    player.setSpawnPoint(World.OVERWORLD, null, false, false);
-                    this.getPlayerManager().respawnPlayer(player, true);
-                }
-            }
-            for (PracticeWorld practiceWorld : this.endPracticeWorlds) {
-                removePracticeWorld(practiceWorld);
-            }
-            for (Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld : this.linkedPracticeWorlds) {
-                removeLinkedPracticeWorld(linkedPracticeWorld);
+        for (ServerPlayerEntity player : this.getPlayerManager().getPlayerList()) {
+            //reset spawn point to overworld if spawn point is in a PracticeWorld
+            if (Objects.equals(player.getSpawnPointDimension().getValue().getNamespace(), "speedrun_practice")) {
+                player.setSpawnPoint(World.OVERWORLD, null, false, false);
+                this.getPlayerManager().respawnPlayer(player, true);
             }
         }
+        for (PracticeWorld practiceWorld : this.endPracticeWorlds) {
+            removePracticeWorld(practiceWorld);
+        }
+        for (Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld : this.linkedPracticeWorlds) {
+            removeLinkedPracticeWorld(linkedPracticeWorld);
+        }
+        this.endPracticeWorlds.clear();
+        this.linkedPracticeWorlds.clear();
     }
 
     public List<PracticeWorld> getEndPracticeWorlds() {

@@ -19,13 +19,8 @@ public class AutoSaveStater {
     private final Map<String, SpeedrunIGTInterface.TimerState> uuidToTimerState = new HashMap<>();
     private final Boolean LOCK=false;
     private static final Map<String,String> criterionToAdvancementId = new ImmutableMap.Builder<String,String>()
-//            .put("minecraft:soul_sand_valley","nether/explore_nether")
-//            .put("minecraft:crimson_forest","nether/explore_nether")
-//            .put("minecraft:warped_forest","nether/explore_nether")
-//            .put("minecraft:nether_wastes","nether/explore_nether")
-//            .put("minecraft:basalt_delta","nether/explore_nether")
             .put("entered_nether","nether/root")
-            .   put("bastion","nether/find_bastion")
+            .put("bastion","nether/find_bastion")
             .put("fortress","nether/find_fortress")
             .put("minecraft:blaze","adventure/kill_all_mobs")
             .put("blaze_rod","nether/obtain_blaze_rod")
@@ -33,11 +28,6 @@ public class AutoSaveStater {
             .put("in_stronghold","story/follow_ender_eye")
             .put("entered_end","end/root").build();
     private static final Map<String,String> criterionToSplitName = new ImmutableMap.Builder<String,String>()
-            .put("minecraft:soul_sand_valley","nether")
-            .put("minecraft:crimson_forest","nether")
-            .put("minecraft:warped_forest","nether")
-            .put("minecraft:nether_wastes","nether")
-            .put("minecraft:basalt_delta","nether")
             .put("entered_nether","nether")
             .put("bastion","bastion")
             .put("fortress","fortress")

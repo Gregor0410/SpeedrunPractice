@@ -19,7 +19,7 @@ import java.util.concurrent.Executor;
 
 public class PracticeWorld extends ServerWorld {
     private final long seed;
-    public final Map<RegistryKey<World>,RegistryKey<World>> associatedWorlds;
+    public Map<RegistryKey<World>,RegistryKey<World>> associatedWorlds;
     public static final Map<DimensionType,RegistryKey<World>> dimensionToVanillaWorldKey = ImmutableMap.of(DimensionType.getOverworldDimensionType(),World.OVERWORLD, DimensionTypeAccess.getNetherType(),World.NETHER,DimensionTypeAccess.getEndType(),World.END);
 
     public PracticeWorld(MinecraftServer server, Executor workerExecutor, LevelStorage.Session session, ServerWorldProperties properties, RegistryKey<World> registryKey, RegistryKey<DimensionType> registryKey2, DimensionType dimensionType, WorldGenerationProgressListener generationProgressListener, ChunkGenerator chunkGenerator, boolean bl, long l, List<Spawner> list, boolean bl2,long seed,RegistryKey<World> associatedOverworld,RegistryKey<World> associatedNether,RegistryKey<World> associatedEnd) {
