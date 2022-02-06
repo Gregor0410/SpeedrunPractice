@@ -2,6 +2,7 @@ package com.gregor0410.speedrunpractice.mixin;
 
 import com.gregor0410.speedrunpractice.world.PracticeWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,6 +26,14 @@ public class EntityMixin{
     }
     @Redirect(method="changeDimension",at=@At(value="INVOKE",target="Lnet/minecraft/world/World;getRegistryKey()Lnet/minecraft/util/registry/RegistryKey;"))
     private RegistryKey<World> resolveDimension(World world){
+        return getWorldRegistryKey(world);
+    }
+    @Redirect(method="changeDimension",at=@At(value="INVOKE",target="Lnet/minecraft/server/world/ServerWorld;getRegistryKey()Lnet/minecraft/util/registry/RegistryKey;"))
+    private RegistryKey<World> resolveDimension(ServerWorld world){
+        return getWorldRegistryKey(world);
+    }
+
+    private RegistryKey<World> getWorldRegistryKey(World world) {
         if(world instanceof PracticeWorld){
             return ((PracticeWorld) world).getVanillaWorldKey();
         }else{

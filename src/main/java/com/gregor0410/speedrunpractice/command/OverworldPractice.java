@@ -40,7 +40,7 @@ public class OverworldPractice implements Command<ServerCommandSource> {
         PracticeWorld overworld = linkedPracticeWorld.get(DimensionType.OVERWORLD_REGISTRY_KEY);
         overworld.getChunkManager().addTicket(ChunkTicketType.START,new ChunkPos(overworld.getSpawnPos()),11, Unit.INSTANCE);
         Practice.setSpawnPos(overworld,player);
-        player.teleport(overworld,overworld.getSpawnPos().getX(),overworld.getSpawnPos().getY(),overworld.getSpawnPos().getZ(),90,0);
+        player.teleport(overworld,overworld.getSpawnPos().getX(),overworld.getSpawnPos().getY(),overworld.getSpawnPos().getZ(),0,0);
         Practice.resetPlayer(player);
         Practice.getInventory(player, "overworld");
         Practice.startSpeedrunIGTTimer();
