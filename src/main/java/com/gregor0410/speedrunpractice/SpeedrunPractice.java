@@ -39,12 +39,13 @@ public class SpeedrunPractice implements ModInitializer {
     public static List<StructurePoolFeatureConfig> possibleBastionConfigs=new ArrayList<>();
     public static SpeedrunPracticeRandom random = new SpeedrunPracticeRandom();
     public static boolean welcomeShown = false;
-    private static Gson gson = new Gson();
+    /*private*/ static final Gson gson = new Gson();
     private static final ModContainer modContainer = FabricLoader.getInstance().getModContainer("speedrun-practice").get();
     private static final String donationLink = "https://ko-fi.com/gregor0410";
-    private static final Version version = modContainer.getMetadata().getVersion();
+    /*private*/ static final Version version = modContainer.getMetadata().getVersion();
     public static AutoSaveStater autoSaveStater = new AutoSaveStater();
     public static SpeedrunIGTInterface speedrunIGTInterface=null;
+    private static final UpdateChecker updateChecker = new UpdateChecker();
 
     static {
         netherStructures.put(StructureFeature.RUINED_PORTAL, new StructureConfig(25, 10, 34222645));
@@ -59,6 +60,7 @@ public class SpeedrunPractice implements ModInitializer {
         config = ModConfig.load();
         update();
         Command.registerCommands();
+        updateChecker.checkUpdate();
     }
 
     public static void sendWelcomeMessage(ServerPlayerEntity player) throws IOException, VersionParsingException {
@@ -67,20 +69,16 @@ public class SpeedrunPractice implements ModInitializer {
                 .setStyle(Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,donationLink))
                 .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new LiteralText("Click"))))
                 .formatted(Formatting.DARK_GREEN),false);
-        CloseableHttpClient client = HttpClients.createDefault();
-        HttpGet request = new HttpGet("https://api.github.com/repos/gregor0410/speedrunpractice/releases/latest");
-        JsonObject jsonObject = client.execute(request, res -> gson.fromJson(new InputStreamReader(res.getEntity().getContent()), JsonObject.class));
-        String latestVersion = jsonObject.get("name").getAsString().substring(1); //get rid of the leading v
-        String patchNotes = jsonObject.get("body").getAsString();
-        if(version.compareTo(new SemanticVersionImpl(latestVersion,false))<0){
-            player.sendMessage(new LiteralText(String.format("There is a new version available: v%s", latestVersion)).formatted(Formatting.RED),false);
-            player.sendMessage(new LiteralText(String.format("Patch notes:\n%s ", patchNotes.replace('\r',' ').replace('-','•'))),false);
+
+        if (updateChecker.isOutdatedVersion()) {
+            player.sendMessage(new LiteralText(String.format("There is a new version available: v%s", updateChecker.getVersionName())).formatted(Formatting.RED),false);
+            player.sendMessage(new LiteralText(String.format("Patch notes:\n%s ", updateChecker.getChangelogs().replace('\r',' ').replace('-','•'))),false);
             player.sendMessage(
-                new LiteralText("Click to download latest version")
-                    .setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x00ff00))
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,"https://github.com/Gregor0410/SpeedrunPractice/releases/latest"))
-                    .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new LiteralText("Click")))),false);
-        }else{
+                    new LiteralText("Click to download latest version")
+                            .setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x00ff00))
+                                    .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL,"https://github.com/Gregor0410/SpeedrunPractice/releases/latest"))
+                                    .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new LiteralText("Click")))),false);
+        } else if (updateChecker.isCheckedUpdate()) {
             player.sendMessage(new LiteralText("You are on the latest version."),false);
         }
     }
