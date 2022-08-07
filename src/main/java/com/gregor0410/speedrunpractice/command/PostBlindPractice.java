@@ -1,25 +1,16 @@
 package com.gregor0410.speedrunpractice.command;
 
-import com.gregor0410.speedrunpractice.IMinecraftServer;
 import com.gregor0410.speedrunpractice.SpeedrunPractice;
-import com.gregor0410.speedrunpractice.world.PracticeWorld;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ChunkTicketType;
-import net.minecraft.util.Unit;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.Heightmap;
-import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.feature.StructureFeature;
 
-import java.io.IOException;
-import java.util.Map;
 import java.util.Random;
 
 public class PostBlindPractice implements Command<ServerCommandSource> {
@@ -37,36 +28,22 @@ public class PostBlindPractice implements Command<ServerCommandSource> {
         }catch(IllegalArgumentException e){
             seed = SpeedrunPractice.random.nextLong();
         }
-        ServerPlayerEntity player = ctx.getSource().getPlayer();
-        MinecraftServer server = ctx.getSource().getMinecraftServer();
-        Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld = null;
-        try {
-            linkedPracticeWorld = ((IMinecraftServer) server).createLinkedPracticeWorld(seed);
-        } catch (IOException e) {
-            return 0;
-        }
-        server.getCommandManager().execute(server.getCommandSource().withSilent(),"/advancement revoke @a everything");
-        PracticeWorld overworld = linkedPracticeWorld.get(DimensionType.OVERWORLD_REGISTRY_KEY);
-        if(SpeedrunPractice.config.postBlindSpawnChunks)
-            overworld.getChunkManager().addTicket(ChunkTicketType.START,new ChunkPos(overworld.getSpawnPos()),11, Unit.INSTANCE);
-        Practice.setSpawnPos(overworld,player);
-        BlockPos overworldPos = getOverworldPos(overworld,maxDist,new Random(seed));
-        Practice.createPortals(linkedPracticeWorld, player, overworld, overworldPos);
-        //this needs to be a server task so the portal gets added to poi storage before the changeDimension call
+        int finalMaxDist = maxDist;
         long finalSeed = seed;
-        server.execute(()-> {
-            player.teleport(overworld,overworldPos.getX(),overworldPos.getY(),overworldPos.getZ(),90,0);//makes sure chunks are loaded at the overworld position
-            player.refreshPositionAndAngles(overworldPos,90,0);
-            Practice.resetPlayer(player);
-            Practice.getInventory(player, "postblind");
-            if(SpeedrunPractice.config.randomisePostBlindInventory)Practice.populatePostBlindInventory(player, finalSeed);
-            player.changeDimension(overworld);
-            Practice.startSpeedrunIGTTimer();
+        Practice.linkedPracticeWorldPractice(ctx,seed,SpeedrunPractice.config.postBlindSpawnChunks,false,true,(overworld)->getOverworldPos(overworld, finalMaxDist,new Random(finalSeed)),"postblind");
+        ctx.getSource().getMinecraftServer().execute(()->{
+            if(SpeedrunPractice.config.randomisePostBlindInventory) {
+                try {
+                    Practice.populatePostBlindInventory(ctx.getSource().getPlayer(), finalSeed);
+                } catch (CommandSyntaxException e) {
+                    e.printStackTrace();
+                }
+            }
         });
         return 1;
     }
 
-    private BlockPos getOverworldPos(PracticeWorld overworld,int maxDist, Random random) {
+    private BlockPos getOverworldPos(ServerWorld overworld, int maxDist, Random random) {
         ChunkPos strongholdLoc = new ChunkPos(overworld.getChunkManager().getChunkGenerator().locateStructure(overworld, StructureFeature.STRONGHOLD,new BlockPos(0,0,0),100,false));
         double angle = random.nextDouble() * 2*Math.PI;
         int dist = maxDist >0 ?random.nextInt(maxDist) : 0;

@@ -1,5 +1,7 @@
 package com.gregor0410.speedrunpractice.command;
 
+import com.google.common.collect.Lists;
+import com.gregor0410.speedrunpractice.IMinecraftServer;
 import com.gregor0410.speedrunpractice.SpeedrunPractice;
 import com.gregor0410.speedrunpractice.mixin.ServerPlayerEntityAccess;
 import com.gregor0410.speedrunpractice.world.PracticeWorld;
@@ -17,12 +19,14 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringNbtReader;
 import net.minecraft.nbt.Tag;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
@@ -30,11 +34,11 @@ import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.dimension.DimensionType;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Practice {
@@ -60,6 +64,7 @@ public class Practice {
         PlayerInventory inventory = player.inventory;
         ListTag listTag = new ListTag();
         inventory.serialize(listTag);
+        SpeedrunPractice.config.practiceInventories.putIfAbsent(key,new ArrayList<>());
         SpeedrunPractice.config.practiceInventories.get(key).set(slot-1,listTag.stream().map(Tag::toString).collect(Collectors.toList()));
         try {
             SpeedrunPractice.config.save();
@@ -70,18 +75,16 @@ public class Practice {
     }
 
     public static void startSpeedrunIGTTimer(){
-        try {
-            Class<?> timerClass = Class.forName("com.redlimerl.speedrunigt.timer.InGameTimer");
-            Method startMethod = timerClass.getMethod("start");
-            startMethod.invoke(null);
-        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored){}
+        if(SpeedrunPractice.speedrunIGTInterface!=null){
+            SpeedrunPractice.speedrunIGTInterface.resetTimer();
+        }
     }
 
 
     public static void getInventory(ServerPlayerEntity player, String key) {
         player.inventory.clear();
         player.playerScreenHandler.sendContentUpdates();
-        List<String> inventoryStringList = SpeedrunPractice.config.practiceInventories.get(key).get(SpeedrunPractice.config.practiceSlots.get(key));
+        List<String> inventoryStringList = SpeedrunPractice.config.practiceInventories.getOrDefault(key, Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>())).get(SpeedrunPractice.config.practiceSlots.getOrDefault(key,0));
         if(inventoryStringList!=null) {
             List<CompoundTag> inventoryTagList = inventoryStringList.stream().map(tag -> {
                 try {
@@ -114,6 +117,7 @@ public class Practice {
         player.getHungerManager().setSaturationLevelClient(5f);
         player.clearStatusEffects();
         player.setVelocity(Vec3d.ZERO);
+        player.setAir(300);
         ((ServerPlayerEntityAccess)player).setSeenCredits(false);
         SpeedrunPractice.autoSaveStater.deleteAllStates();
     }
@@ -132,7 +136,48 @@ public class Practice {
         return 1;
     }
 
-    static void createPortals(Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld, ServerPlayerEntity player, ServerWorld overworld, BlockPos overworldPos) {
+    public static void linkedPracticeWorldPractice(CommandContext<ServerCommandSource> ctx, long seed, boolean spawnChunks, boolean netherSpawn,boolean createPortals, Function<ServerWorld,BlockPos> overworldPosProvider, String key) throws CommandSyntaxException {
+        MinecraftServer server = ctx.getSource().getMinecraftServer();
+        Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld = null;
+        try {
+            linkedPracticeWorld = ((IMinecraftServer) server).createLinkedPracticeWorld(seed);
+        } catch (IOException e) {
+            return;
+        }
+        ServerPlayerEntity player = ctx.getSource().getPlayer();
+        PracticeWorld overworld = linkedPracticeWorld.get(DimensionType.OVERWORLD_REGISTRY_KEY);
+        PracticeWorld nether = linkedPracticeWorld.get(DimensionType.THE_NETHER_REGISTRY_KEY);
+        PracticeWorld destWorld = netherSpawn ? nether : overworld;
+        BlockPos overworldPos = overworldPosProvider.apply(overworld);
+        Practice.setSpawnPos(overworld,player);
+        if(spawnChunks)
+            overworld.getChunkManager().addTicket(ChunkTicketType.START,new ChunkPos(overworld.getSpawnPos()),11, Unit.INSTANCE);
+        BlockPos destPos;
+        if(netherSpawn) {
+            destPos = new BlockPos(overworldPos.getX()/8D,overworldPos.getY(),overworldPos.getZ()/8D);
+            ((ServerPlayerEntityAccess) player).setEnteredNetherPos(Vec3d.ofCenter(destPos));
+        }else{
+            destPos = new BlockPos(overworldPos);
+        }
+        if(createPortals)
+            Practice.createPortals(linkedPracticeWorld, player, overworld, overworldPos);
+        server.getCommandManager().execute(server.getCommandSource().withSilent(),"/advancement revoke @a everything");
+        //this needs to be a server task so the portal gets added to poi storage before the changeDimension call
+        server.execute(()-> {
+            destWorld.getChunk(destPos);
+            if(createPortals) {
+                player.refreshPositionAndAngles(destPos, 90, 0);
+                player.changeDimension(destWorld);
+            }else{
+                player.teleport(destWorld,destPos.getX(),destPos.getY(),destPos.getZ(),90,0);
+            }
+            Practice.resetPlayer(player);
+            Practice.getInventory(player, key);
+            Practice.startSpeedrunIGTTimer();
+        });
+    }
+
+    public static void createPortals(Map<RegistryKey<DimensionType>, PracticeWorld> linkedPracticeWorld, ServerPlayerEntity player, ServerWorld overworld, BlockPos overworldPos) {
         BlockPos prevPos = player.getBlockPos();
         BlockPos netherPos = new BlockPos(overworldPos.getX() / 8D, overworldPos.getY(), overworldPos.getZ() / 8D);
         player.refreshPositionAndAngles(netherPos,90,0);

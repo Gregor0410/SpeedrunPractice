@@ -13,6 +13,7 @@ repositories {
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
     maven{url "https://maven.shedaniel.me/"}
+    mavenLocal()
 }
 
 configurations {
@@ -32,9 +33,11 @@ dependencies {
     modIncludeImplementation(fabricApi.module("fabric-commands-v0",project.fabric_version))
     modIncludeImplementation(fabricApi.module("fabric-command-api-v1",project.fabric_command_api_version))
     modIncludeImplementation(fabricApi.module("fabric-resource-loader-v0",project.fabric_version))
+    modIncludeImplementation("com.gregor0410:ptlib:1.0.0")
     modIncludeImplementation("me.shedaniel.cloth:config-2:4.6.0"){
         exclude(group: "net.fabricmc.fabric-api")
     }
+    compileOnlyApi files("libs/SpeedRunIGT-10.3+1.16.1.jar")
 }
 
 processResources {
@@ -90,5 +93,13 @@ publishing {
         // Notice: This block does NOT have the same function as the block in the top level.
         // The repositories here will be used for publishing your artifact, not for
         // retrieving dependencies.
+        maven{
+            name="GitHubPackages"
+            url="https://maven.pkg.github.com/gregor0410/SpeedrunPractice"
+            credentials{
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }

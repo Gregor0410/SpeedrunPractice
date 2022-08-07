@@ -5,9 +5,6 @@
   "compatibilityLevel": "JAVA_8",
   "mixins": [
     "AbstractFireBlockMixin",
-    "BastionRemnantFeatureConfigMixin",
-    "BastionRemnantFeatureMixin",
-    "ChunkGeneratorTypeMixin",
     "DimensionTypeAccess",
     "EnderDragonFightAccess",
     "EndPortalBlockMixin",
@@ -16,7 +13,6 @@
     "LevelPropertiesAccess",
     "MinecraftServerAccess",
     "MinecraftServerMixin",
-    "NetherFortressFeatureMixin",
     "OptionsScreenMixin",
     "PlayerAdvancementTrackerMixin",
     "PlayerManagerMixin",
@@ -25,10 +21,6 @@
     "ServerPlayerEntityAccess",
     "ServerPlayerEntityMixin",
     "ServerWorldAccess",
-    "ServerWorldMixin",
-    "SpikeCacheMixin",
-    "StructuresConfigAccess",
-    "StructuresConfigMixin",
     "ThreadedAnvilChunkStorageAccess"
   ],
   "client": [

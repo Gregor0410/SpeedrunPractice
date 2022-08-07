@@ -1,38 +1,38 @@
 package com.gregor0410.speedrunpractice;
 
+import com.redlimerl.speedrunigt.timer.InGameTimer;
+import com.redlimerl.speedrunigt.timer.running.RunType;
+
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 
 public class SpeedrunIGTInterface {
-    private final Class<?> timer;
-    private final Field startTimeField;
-    private final Field activateTicksField;
+    Field activateTicksField;
 
-    public SpeedrunIGTInterface() throws NoSuchFieldException, ClassNotFoundException {
-        timer = Class.forName("com.redlimerl.speedrunigt.timer.InGameTimer");
-        startTimeField = timer.getDeclaredField("startTime");
-        activateTicksField = timer.getDeclaredField("activateTicks");
-        startTimeField.setAccessible(true);
+    public SpeedrunIGTInterface() throws NoSuchFieldException {
+        activateTicksField = InGameTimer.class.getDeclaredField("activateTicks");
         activateTicksField.setAccessible(true);
     }
-    public TimerState getTimerState() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        Object instance = timer.getMethod("getInstance").invoke(null);
-        long startTime = startTimeField.getLong(instance);
-        long activateTicks = activateTicksField.getLong(instance);
-        return new TimerState(startTime, activateTicks);
+
+    public void resetTimer(){
+        InGameTimer.start("practice-world", RunType.RANDOM_SEED);
     }
-    public void setTimerState(TimerState timerState) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        Object instance = timer.getMethod("getInstance").invoke(null);
-        startTimeField.setLong(instance,timerState.startTime);
-        activateTicksField.setLong(instance,timerState.activateTicks);
+
+    public TimerState getTimerState() {
+        InGameTimer timer = InGameTimer.getInstance();
+        return new TimerState(timer.getRealTimeAttack(), timer.getTicks());
+    }
+    public void setTimerState(TimerState timerState) throws IllegalAccessException {
+        InGameTimer timer = InGameTimer.getInstance();
+        timer.setStartTime(System.currentTimeMillis()-timerState.rta);
+        activateTicksField.setInt(timer,(int)timerState.activateTicks);
     }
 
     public static class TimerState{
-        private final long startTime;
+        private final long rta;
         private final long activateTicks;
 
-        public TimerState(long startTime, long activateTicks){
-            this.startTime = startTime;
+        public TimerState(long rta, long activateTicks){
+            this.rta = rta;
             this.activateTicks = activateTicks;
         }
     }

@@ -4,7 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.gregor0410.speedrunpractice.SpeedrunPractice;
+import com.gregor0410.ptlib.PTLib;
+import com.gregor0410.ptlib.config.PTConfig;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -14,6 +15,8 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.world.gen.chunk.StructuresConfig;
+import net.minecraft.world.gen.feature.StructureFeature;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
@@ -26,12 +29,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Math.ceil;
+import static java.lang.Math.round;
+
 public class ModConfig{
-    public Boolean stables=true;
-    public Boolean bridge=true;
-    public Boolean treasure=true;
-    public Boolean housing=true;
-    public List<Boolean> endTowers = Lists.newArrayList(true,true,true,true,true,true,true,true,true,true);
     public static final List<String> DEFAULTENDINVENTORY;
     public static final List<String> DEFAULTNETHERINVENTORY;
     public static final List<String> DEFAULTPOSTBLINDINVENTORY;
@@ -39,18 +40,17 @@ public class ModConfig{
             "end",Lists.newArrayList(DEFAULTENDINVENTORY,new ArrayList<>(),new ArrayList<>()),
             "nether",Lists.newArrayList(DEFAULTNETHERINVENTORY,new ArrayList<>(),new ArrayList<>()),
             "overworld",Lists.newArrayList(new ArrayList<>(),new ArrayList<>(),new ArrayList<>()),
+            "stronghold",Lists.newArrayList(DEFAULTPOSTBLINDINVENTORY,new ArrayList<>(),new ArrayList<>()),
             "postblind",Lists.newArrayList(DEFAULTPOSTBLINDINVENTORY,new ArrayList<>(),new ArrayList<>())));
-    public Map<String,Integer> practiceSlots = new HashMap<>(ImmutableMap.of("end", 0, "nether", 0,"postblind",0,"overworld",0));
-    public float netherRegionSize=1;
-    public int bastionRarity = 60;
+    public Map<String,Integer> practiceSlots = new HashMap<>(ImmutableMap.of("end", 0, "nether", 0,"postblind",0,"overworld",0,"stronghold",0));
+    public PTConfig ptConfig = new PTConfig();
     public int defaultMaxDist = 1000;
     public boolean calcMode = true;
     public boolean deletePracticeWorlds = true;
     public boolean postBlindSpawnChunks =false;
     public boolean caveSpawns=true;
     public boolean randomisePostBlindInventory=true;
-    public boolean eliminateCageSpawns = false;
-    public SpeedrunPractice.DragonType dragonType = SpeedrunPractice.DragonType.BOTH;
+
 
     public static ModConfig load() {
         Path path = FabricLoader.getInstance().getConfigDir().resolve("speedrun-practice.json");
@@ -79,17 +79,18 @@ public class ModConfig{
                         e.printStackTrace();
                     }
                 });
+
         ConfigCategory general = builder.getOrCreateCategory(new TranslatableText("speedrun-practice.options.general"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
-        general.addEntry(entryBuilder.startIntSlider(new TranslatableText("speedrun-practice.options.nether_region_size"),(int)(netherRegionSize*100),7,200)
+        general.addEntry(entryBuilder.startIntSlider(new TranslatableText("speedrun-practice.options.nether_region_size"),getNetherRegionSize(),1,200)
                 .setDefaultValue(100)
-                .setSaveConsumer(a->netherRegionSize=(float)a/100)
+                .setSaveConsumer(this::setNetherRegionSize)
                 .setTextGetter(a->new LiteralText(String.format("%d %%",a)))
                 .build());
-        general.addEntry(entryBuilder.startIntSlider(new TranslatableText("speedrun-practice.options.bastion_rarity"),bastionRarity,0,100)
+        general.addEntry(entryBuilder.startIntSlider(new TranslatableText("speedrun-practice.options.bastion_rarity"), ptConfig.getBastionRarity(), 0,100)
                 .setDefaultValue(60)
                 .setTextGetter(a->new LiteralText(String.format("%d %%",a)))
-                .setSaveConsumer(a->bastionRarity=a)
+                .setSaveConsumer(a->ptConfig.setBastionRarity(a))
                 .setTooltip(new TranslatableText("speedrun-practice.options.bastion_rarity_tooltip"))
                 .build());
         general.addEntry(entryBuilder.startIntField(new TranslatableText("speedrun-practice.options.max_dist"),defaultMaxDist)
@@ -118,34 +119,34 @@ public class ModConfig{
                 .setDefaultValue(true)
                 .build());
         general.addEntry(entryBuilder.startSubCategory(new TranslatableText("speedrun-practice.options.bastions"), Lists.newArrayList(
-                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.housing"),housing)
+                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.housing"), ptConfig.isHousing())
                         .setDefaultValue(true)
                         .setYesNoTextSupplier(a->a ? ScreenTexts.ON : ScreenTexts.OFF)
-                        .setSaveConsumer(a->housing=a)
+                        .setSaveConsumer(a->ptConfig.setHousing(a))
                         .build(),
-                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.stables"),stables)
+                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.stables"), ptConfig.isStables())
                         .setDefaultValue(true)
                         .setYesNoTextSupplier(a->a ? ScreenTexts.ON : ScreenTexts.OFF)
-                        .setSaveConsumer(a->stables=a)
+                        .setSaveConsumer(a->ptConfig.setStables(a))
                         .build(),
-                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.treasure"),treasure)
+                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.treasure"), ptConfig.isTreasure())
                         .setDefaultValue(true)
                         .setYesNoTextSupplier(a->a ? ScreenTexts.ON : ScreenTexts.OFF)
-                        .setSaveConsumer(a->treasure=a)
+                        .setSaveConsumer(a->ptConfig.setTreasure(a))
                         .build(),
-                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.bridge"),bridge)
+                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.bastions.bridge"), ptConfig.isBridge())
                         .setDefaultValue(true)
                         .setYesNoTextSupplier(a->a ? ScreenTexts.ON : ScreenTexts.OFF)
-                        .setSaveConsumer(a->bridge=a)
+                        .setSaveConsumer(a->ptConfig.setBridge(a))
                         .build())).build());
         general.addEntry(entryBuilder.startSubCategory(new TranslatableText("speedrun-practice.options.end"), Lists.newArrayList(
-                entryBuilder.startEnumSelector(new TranslatableText("speedrun-practice.options.dragon_type"),SpeedrunPractice.DragonType.class,dragonType)
-                        .setDefaultValue(SpeedrunPractice.DragonType.BOTH)
-                        .setSaveConsumer(a->dragonType=a)
+                entryBuilder.startEnumSelector(new TranslatableText("speedrun-practice.options.dragon_type"), PTLib.DragonType.class,ptConfig.getDragonType())
+                        .setDefaultValue(PTLib.DragonType.BOTH)
+                        .setSaveConsumer(a->ptConfig.setDragonType(a))
                         .build(),
-                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.eliminate_cage_spawns"),eliminateCageSpawns)
+                entryBuilder.startBooleanToggle(new TranslatableText("speedrun-practice.options.eliminate_cage_spawns"),ptConfig.isEliminateCageSpawns())
                         .setDefaultValue(true)
-                        .setSaveConsumer(a->eliminateCageSpawns=a)
+                        .setSaveConsumer(a->ptConfig.setEliminateCageSpawns(a))
                         .build(),
                 getEndTower(entryBuilder,"speedrun-practice.options.towers.small_boy",0),
                 getEndTower(entryBuilder,"speedrun-practice.options.towers.small_cage",1),
@@ -162,17 +163,34 @@ public class ModConfig{
         return builder.build();
     }
 
+    private void setNetherRegionSize(Integer integer) {
+        float scale = (float)integer/100;
+        int defaultNetherSpacing = StructuresConfig.DEFAULT_STRUCTURES.get(StructureFeature.FORTRESS).getSpacing();
+        int defaultNetherSeparation = StructuresConfig.DEFAULT_STRUCTURES.get(StructureFeature.FORTRESS).getSeparation();
+        int netherSalt = 30084232;
+        PTConfig.StructureRegion netherConfig = new PTConfig.StructureRegion((int) ceil(defaultNetherSpacing*scale), round(defaultNetherSeparation*scale),netherSalt);
+        ptConfig.getStructureRegions().put("fortress",netherConfig);
+        ptConfig.getStructureRegions().put("bastion_remnant",netherConfig);
+    }
+
+    private int getNetherRegionSize() {
+        int defaultNetherSpacing = StructuresConfig.DEFAULT_STRUCTURES.get(StructureFeature.FORTRESS).getSpacing();
+        PTConfig.StructureRegion fortress = ptConfig.getStructureRegions().get("fortress");
+        if(fortress==null) return 100;
+        return (int)((float) fortress.spacing / (float)defaultNetherSpacing * 100);
+    }
+
     @NotNull
     private BooleanListEntry getEndTower(ConfigEntryBuilder entryBuilder, String text, int tower) {
-        return entryBuilder.startBooleanToggle(new TranslatableText(text), endTowers.get(tower))
+        return entryBuilder.startBooleanToggle(new TranslatableText(text), ptConfig.getEndTowers().get(tower))
                 .setDefaultValue(true)
                 .setYesNoTextSupplier(a -> a ? ScreenTexts.ON : ScreenTexts.OFF)
-                .setSaveConsumer(a ->endTowers.set(tower,a))
+                .setSaveConsumer(a ->ptConfig.getEndTowers().set(tower,a))
                 .build();
     }
 
     public void save() throws IOException {
-        SpeedrunPractice.update();
+        PTLib.setConfig(ptConfig);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         Path path = FabricLoader.getInstance().getConfigDir().resolve("speedrun-practice.json");
         Files.createDirectories(path.getParent());

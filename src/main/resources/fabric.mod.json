@@ -22,6 +22,7 @@
     "minecraft": "1.16.1"
   },
   "breaks": {
-    "lazystronghold": "<1.1.0"
+    "lazystronghold": "<1.1.0",
+    "speedrunigt": "<10.3"
   }
 }

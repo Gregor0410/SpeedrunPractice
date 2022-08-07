@@ -32,10 +32,7 @@ public class PortalForcerMixin {
     private void savePortalChunk(Entity entity, CallbackInfoReturnable<Boolean> cir){
         ChunkHolder chunkHolder = ((ThreadedAnvilChunkStorageAccess) world.getChunkManager().threadedAnvilChunkStorage).getChunkHolders().get(new ChunkPos(this.mutable).toLong());
         CompletableFuture<Chunk> completableFuture = chunkHolder.getFuture();
-        do {
-            ((ThreadedAnvilChunkStorageAccess) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().runTasks(completableFuture::isDone);
-        } while (completableFuture != chunkHolder.getFuture());
-
+        ((ThreadedAnvilChunkStorageAccess) world.getChunkManager().threadedAnvilChunkStorage).getMainThreadExecutor().runTasks(completableFuture::isDone);
         completableFuture.join();
         world.getChunkManager().save(false);
     }

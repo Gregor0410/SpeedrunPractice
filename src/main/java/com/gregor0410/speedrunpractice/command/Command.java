@@ -26,13 +26,19 @@ public class Command {
                     .then(literal("end").then(selectTree).then(saveTree))
                     .then(literal("nether").then(selectTree).then(saveTree))
                     .then(literal("postblind").then(selectTree).then(saveTree))
-                    .then(literal("overworld").then(selectTree).then(saveTree));
-            SuggestionProvider revertSuggestionsProvider = (commandSource,suggestionBuilder)-> CommandSource.suggestMatching(SpeedrunPractice.autoSaveStater.splitsToUUID.keySet().stream(),suggestionBuilder);
+                    .then(literal("overworld").then(selectTree).then(saveTree))
+                    .then(literal("stronghold").then(selectTree).then(saveTree));
+            SuggestionProvider<ServerCommandSource> revertSuggestionsProvider = (commandSource,suggestionBuilder)-> CommandSource.suggestMatching(SpeedrunPractice.autoSaveStater.splitsToUUID.keySet().stream(),suggestionBuilder);
             dispatcher.register(
                 literal("practice")
                     .then(literal("end").executes(new EndPractice()).then(argument("seed", LongArgumentType.longArg()).executes(new EndPractice())))
+                    .then(literal("stronghold").executes(new StrongholdPractice()).then(argument("seed", LongArgumentType.longArg()).executes(new StrongholdPractice())))
                     .then(literal("nether").executes(new NetherPractice()).then(argument("seed", LongArgumentType.longArg()).executes(new NetherPractice())))
-                    .then(literal("overworld").executes(new OverworldPractice()).then(argument("seed", LongArgumentType.longArg()).executes(new OverworldPractice())))
+                    .then(literal("overworld")
+                        .executes(new OverworldPractice())
+                        .then(argument("seed", LongArgumentType.longArg()).executes(new OverworldPractice()))
+                        .then(literal("bt").executes(new BuriedTreasurePractice()).then(argument("seed", LongArgumentType.longArg()).executes(new BuriedTreasurePractice())))
+                    )
                     .then(literal("postblind").executes(new PostBlindPractice()).then(argument("maxDist",integer(0)).executes(new PostBlindPractice()).then(argument("seed", LongArgumentType.longArg()).executes(new PostBlindPractice()))))
                     .then(literal("world").executes(ctx->{
                         ServerPlayerEntity player = ctx.getSource().getPlayer();
